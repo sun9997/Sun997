@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>居安智卫 · AI建筑低碳能源智慧管理平台</title>
+<link rel="stylesheet" href="assets/css/app.css?v=9">
+</head>
+<body>
+<div id="app">
+  <!-- 顶部导航 -->
+  <header class="topbar">
+    <div class="tb-left">
+      <div class="tb-logo">
+        <svg viewBox="0 0 64 64" width="34" height="34">
+          <defs><linearGradient id="lg2" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#22e0ff"/><stop offset="100%" stop-color="#7c5bff"/>
+          </linearGradient></defs>
+          <path d="M32 4 L58 14 V34 C58 48 46 56 32 60 C18 56 6 48 6 34 V14 Z" fill="none" stroke="url(#lg2)" stroke-width="3"/>
+          <path d="M32 18 L44 23 V35 C44 43 38 48 32 50 C26 48 20 43 20 35 V23 Z" fill="url(#lg2)"/>
+        </svg>
+      </div>
+      <div class="tb-title">
+        <h1>居安智卫</h1>
+        <span>融合结构安全感知的AI建筑低碳能源智慧管理平台</span>
+      </div>
+    </div>
+
+    <div class="tb-viewswitch" id="viewSwitch">
+      <div class="vs-item active" data-view="ops"><i class="vs-ico vs-energy"></i>长期运维视图<em>核心</em></div>
+      <div class="vs-item" data-view="build"><i class="vs-ico vs-build"></i>施工阶段视图<em>附属</em></div>
+    </div>
+
+    <div class="tb-right">
+      <div class="tb-clock"><span id="clockDate"></span><b id="clockTime"></b></div>
+      <div class="tb-alert" id="tbAlert" title="活动告警">
+        <span class="bell"></span><i id="tbAlertNum">0</i>
+      </div>
+      <div class="tb-user">
+        <div class="avatar" id="userAvatar">管</div>
+        <div class="u-info">
+          <b id="userName">-</b>
+          <span id="userRole">-</span>
+        </div>
+      </div>
+      <button class="btn-logout" id="btnLogout" title="退出登录">退出</button>
+    </div>
+  </header>
+
+  <div class="body">
+    <!-- 侧边栏 -->
+    <aside class="sidebar" id="sidebar"></aside>
+    <!-- 内容区 -->
+    <main class="content" id="content"></main>
+  </div>
+</div>
+
+<!-- 通用弹窗容器 -->
+<div class="modal-mask" id="modalMask">
+  <div class="modal" id="modalBox">
+    <div class="modal-hd">
+      <span id="modalTitle"></span>
+      <b class="modal-x" id="modalX">×</b>
+    </div>
+    <div class="modal-bd" id="modalBody"></div>
+    <div class="modal-ft" id="modalFooter"></div>
+  </div>
+</div>
+<div id="toastBox"></div>
+
+<!-- 第三方库：Three.js r128 + OrbitControls（经典脚本） + ECharts5 -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<!-- 统一数据中台 -->
+<script src="assets/js/data.js?v=9"></script>
+<!-- 3D 场景 -->
+<script src="assets/js/3d-building.js?v=9"></script>
+<script src="assets/js/3d-site.js?v=9"></script>
+<!-- 图表组件 -->
+<script src="assets/js/charts.js?v=9"></script>
+<!-- 页面模块 -->
+<script src="assets/js/pages-ops.js?v=9"></script>
+<script src="assets/js/pages-build.js?v=9"></script>
+<script src="assets/js/pages-common.js?v=9"></script>
+<script src="assets/js/pages-carbon.js?v=9"></script>
+<!-- 主框架 -->
+<script src="assets/js/app.js?v=9"></script>
+</body>
+</html>

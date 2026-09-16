@@ -1,0 +1,111 @@
+/* ========== 居安智卫 登录页 ========== */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:"Microsoft YaHei","PingFang SC","Segoe UI",sans-serif;
+  background:#030b1a;color:#dcecff;overflow:hidden;
+}
+:root{
+  --cyan:#22e0ff;--blue:#2f7bff;--purple:#7c5bff;--green:#21e6a4;--yellow:#ffc83d;--red:#ff4d6a;
+}
+.login-bg{position:fixed;inset:0;z-index:0;background:
+  radial-gradient(1200px 700px at 75% 20%,rgba(47,123,255,.22),transparent 60%),
+  radial-gradient(900px 600px at 15% 85%,rgba(124,91,255,.20),transparent 60%),
+  linear-gradient(160deg,#05122a 0%,#04101f 55%,#020814 100%);}
+#particles{position:absolute;inset:0;width:100%;height:100%}
+.bg-grid{position:absolute;inset:0;
+  background-image:linear-gradient(rgba(34,224,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(34,224,255,.05) 1px,transparent 1px);
+  background-size:44px 44px;mask-image:radial-gradient(circle at 50% 45%,#000 30%,transparent 75%);}
+.glow{position:absolute;border-radius:50%;filter:blur(90px);opacity:.5}
+.glow-1{width:420px;height:420px;background:rgba(34,224,255,.18);top:-120px;left:8%;animation:float 9s ease-in-out infinite}
+.glow-2{width:480px;height:480px;background:rgba(124,91,255,.20);bottom:-160px;right:6%;animation:float 11s ease-in-out infinite reverse}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(30px)}}
+
+.login-wrap{position:relative;z-index:2;height:100%;display:flex;align-items:center;justify-content:center;gap:90px;padding:0 40px}
+
+/* 品牌区 */
+.brand-side{width:520px;animation:fadeUp .8s ease both}
+.brand-logo{filter:drop-shadow(0 0 18px rgba(34,224,255,.55));margin-bottom:18px}
+.brand-name{font-size:64px;font-weight:800;letter-spacing:10px;
+  background:linear-gradient(90deg,#9ff4ff,#22e0ff 40%,#7c5bff);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:0 0 40px rgba(34,224,255,.25)}
+.brand-en{font-size:12px;letter-spacing:3px;color:rgba(160,200,255,.55);margin-top:6px}
+.brand-sub{font-size:19px;color:#b9d8ff;margin-top:22px;letter-spacing:1px}
+.brand-feats{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:42px;max-width:440px}
+.feat{display:flex;align-items:center;gap:10px;font-size:14px;color:#9fc3ec;
+  border:1px solid rgba(70,140,255,.25);background:rgba(20,50,100,.22);
+  padding:11px 14px;border-radius:8px;backdrop-filter:blur(4px)}
+.ico{width:20px;height:20px;display:inline-block;background-size:contain;background-repeat:no-repeat;background-position:center}
+.i-3d{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2322e0ff' stroke-width='1.6'%3E%3Cpath d='M12 2l9 5v10l-9 5-9-5V7z'/%3E%3Cpath d='M12 12l9-5M12 12v10M12 12L3 7'/%3E%3C/svg%3E")}
+.i-ai{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a78bff' stroke-width='1.6'%3E%3Crect x='5' y='5' width='14' height='14' rx='3'/%3E%3Cpath d='M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3'/%3E%3Ccircle cx='9.5' cy='10' r='1' fill='%23a78bff'/%3E%3Ccircle cx='14.5' cy='10' r='1' fill='%23a78bff'/%3E%3C/svg%3E")}
+.i-leaf{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2321e6a4' stroke-width='1.6'%3E%3Cpath d='M11 20A7 7 0 0 1 4 13c0-6 7-9 16-9-1 9-4 16-9 16z'/%3E%3Cpath d='M4 20c4-6 8-8 12-9'/%3E%3C/svg%3E")}
+.i-shield{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffc83d' stroke-width='1.6'%3E%3Cpath d='M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z'/%3E%3Cpath d='M9 12l2 2 4-4'/%3E%3C/svg%3E")}
+
+/* 登录卡片 */
+.login-card{position:relative;width:420px;padding:38px 36px 28px;border-radius:14px;
+  background:linear-gradient(170deg,rgba(16,40,80,.72),rgba(8,20,44,.82));
+  border:1px solid rgba(80,150,255,.30);
+  box-shadow:0 24px 70px rgba(0,0,0,.55),inset 0 0 40px rgba(40,100,200,.08);
+  backdrop-filter:blur(10px);animation:fadeUp .8s .15s ease both}
+.card-corner{position:absolute;width:18px;height:18px;border-color:var(--cyan);border-style:solid;opacity:.9}
+.card-corner.tl{top:-1px;left:-1px;border-width:2px 0 0 2px;border-top-left-radius:14px}
+.card-corner.tr{top:-1px;right:-1px;border-width:2px 2px 0 0;border-top-right-radius:14px}
+.card-corner.bl{bottom:-1px;left:-1px;border-width:0 0 2px 2px;border-bottom-left-radius:14px}
+.card-corner.br{bottom:-1px;right:-1px;border-width:0 2px 2px 0;border-bottom-right-radius:14px}
+.login-card h2{font-size:24px;color:#eaf6ff;letter-spacing:2px}
+.login-tip{font-size:12px;color:rgba(150,190,235,.55);margin:8px 0 24px}
+
+.field{margin-bottom:18px}
+.field>label{display:block;font-size:13px;color:#8fb6e6;margin-bottom:8px;letter-spacing:1px}
+.input-box{display:flex;align-items:center;gap:10px;height:46px;padding:0 14px;border-radius:8px;
+  background:rgba(6,20,42,.7);border:1px solid rgba(80,140,255,.28);transition:.2s}
+.input-box:focus-within{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(34,224,255,.12)}
+.input-box input{flex:1;background:transparent;border:none;outline:none;color:#eaf6ff;font-size:15px}
+.input-box input::placeholder{color:rgba(140,175,220,.4)}
+.input-ico{width:18px;height:18px;flex:none;opacity:.8;background-size:contain;background-repeat:no-repeat}
+.input-ico.user{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2322e0ff' stroke-width='1.7'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21c0-4 4-6 8-6s8 2 8 6'/%3E%3C/svg%3E")}
+.input-ico.lock{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2322e0ff' stroke-width='1.7'%3E%3Crect x='4' y='10' width='16' height='11' rx='2'/%3E%3Cpath d='M8 10V7a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E")}
+
+.role-tabs{display:flex;gap:8px}
+.role-tab{flex:1;text-align:center;padding:9px 4px;border-radius:8px;cursor:pointer;
+  border:1px solid rgba(80,140,255,.28);background:rgba(6,20,42,.6);transition:.2s;user-select:none}
+.role-tab b{display:block;font-size:13px;color:#aac6ef;font-weight:600}
+.role-tab span{display:block;font-size:10px;color:rgba(140,175,220,.5);margin-top:3px}
+.role-tab:hover{border-color:rgba(34,224,255,.5)}
+.role-tab.active{border-color:var(--cyan);background:linear-gradient(160deg,rgba(34,224,255,.16),rgba(47,123,255,.10));
+  box-shadow:0 0 16px rgba(34,224,255,.18)}
+.role-tab.active b{color:#bdf4ff}
+
+.login-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#7fa3cf;margin:2px 0 18px}
+.remember{display:flex;align-items:center;gap:6px;cursor:pointer}
+.remember input{accent-color:var(--cyan)}
+.forget{color:rgba(140,175,220,.55)}
+
+.btn-login{width:100%;height:48px;border:none;border-radius:8px;cursor:pointer;font-size:17px;letter-spacing:6px;color:#03122a;font-weight:700;
+  background:linear-gradient(90deg,#2ee6ff,#2f8bff 55%,#7c5bff);
+  box-shadow:0 8px 26px rgba(47,140,255,.45);transition:.2s;position:relative;overflow:hidden}
+.btn-login:hover{transform:translateY(-1px);box-shadow:0 10px 32px rgba(47,140,255,.6)}
+.btn-login:active{transform:translateY(1px)}
+.btn-login::after{content:"";position:absolute;top:0;left:-80%;width:50%;height:100%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.5),transparent);transform:skewX(-20deg);animation:shine 3.2s infinite}
+@keyframes shine{0%{left:-80%}55%{left:140%}100%{left:140%}}
+.login-msg{height:18px;font-size:12px;margin-top:8px;color:var(--red);text-align:center}
+
+.test-accounts{margin-top:18px;border-top:1px dashed rgba(90,150,230,.25);padding-top:14px}
+.ta-title{font-size:11px;color:#6f93c0;letter-spacing:1px;margin-bottom:8px}
+.ta-item{display:flex;align-items:center;gap:8px;font-size:12px;padding:7px 9px;border-radius:7px;cursor:pointer;transition:.15s}
+.ta-item:hover{background:rgba(40,100,190,.22)}
+.ta-tag{padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.tag-admin{background:rgba(124,91,255,.25);color:#c0adff;border:1px solid rgba(124,91,255,.5)}
+.tag-ops{background:rgba(33,230,164,.15);color:#5cf0c0;border:1px solid rgba(33,230,164,.45)}
+.tag-accept{background:rgba(255,200,61,.15);color:#ffd970;border:1px solid rgba(255,200,61,.45)}
+.ta-user{color:#cfe4ff;font-family:Consolas,monospace}
+.ta-item em{font-style:normal;color:rgba(140,175,220,.5);font-size:11px;margin-left:auto}
+
+.login-footer{position:fixed;bottom:14px;left:0;right:0;text-align:center;z-index:2;
+  font-size:11px;color:rgba(130,165,215,.4);letter-spacing:1px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+@media (max-width:1100px){.brand-side{display:none}}

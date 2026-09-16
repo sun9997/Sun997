@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>居安智卫 · 登录</title>
+<link rel="stylesheet" href="assets/css/login.css">
+</head>
+<body>
+<div class="login-bg">
+  <canvas id="particles"></canvas>
+  <div class="bg-grid"></div>
+  <div class="glow glow-1"></div>
+  <div class="glow glow-2"></div>
+</div>
+
+<div class="login-wrap">
+  <div class="brand-side">
+    <div class="brand-logo">
+      <svg viewBox="0 0 64 64" width="56" height="56">
+        <defs>
+          <linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#22e0ff"/>
+            <stop offset="100%" stop-color="#7c5bff"/>
+          </linearGradient>
+        </defs>
+        <path d="M32 4 L58 14 V34 C58 48 46 56 32 60 C18 56 6 48 6 34 V14 Z" fill="none" stroke="url(#lg1)" stroke-width="2.5"/>
+        <path d="M32 18 L44 23 V35 C44 43 38 48 32 50 C26 48 20 43 20 35 V23 Z" fill="url(#lg1)" opacity="0.85"/>
+        <circle cx="32" cy="33" r="4" fill="#04101f"/>
+      </svg>
+    </div>
+    <h1 class="brand-name">居安智卫</h1>
+    <div class="brand-en">JUAN ZHIWEI · AI LOW-CARBON ENERGY PLATFORM</div>
+    <p class="brand-sub">融合结构安全感知的AI建筑低碳能源智慧管理平台</p>
+    <div class="brand-feats">
+      <div class="feat"><i class="ico i-3d"></i>3D数字孪生</div>
+      <div class="feat"><i class="ico i-ai"></i>AI负荷预测</div>
+      <div class="feat"><i class="ico i-leaf"></i>低碳能耗优化</div>
+      <div class="feat"><i class="ico i-shield"></i>结构安全感知</div>
+    </div>
+  </div>
+
+  <div class="login-card">
+    <div class="card-corner tl"></div><div class="card-corner tr"></div>
+    <div class="card-corner bl"></div><div class="card-corner br"></div>
+    <h2>欢迎登录</h2>
+    <p class="login-tip">统一身份认证 · 角色权限自动识别</p>
+
+    <form id="loginForm" autocomplete="off">
+      <div class="field">
+        <label>账号</label>
+        <div class="input-box">
+          <span class="input-ico user"></span>
+          <input type="text" id="username" placeholder="请输入账号" value="">
+        </div>
+      </div>
+      <div class="field">
+        <label>密码</label>
+        <div class="input-box">
+          <span class="input-ico lock"></span>
+          <input type="password" id="password" placeholder="请输入密码">
+        </div>
+      </div>
+      <div class="field">
+        <label>角色</label>
+        <div class="role-tabs" id="roleTabs">
+          <div class="role-tab active" data-role="admin"><b>管理员</b><span>全部权限</span></div>
+          <div class="role-tab" data-role="ops"><b>运维人员</b><span>运维视图</span></div>
+          <div class="role-tab" data-role="accept"><b>工程验收</b><span>施工视图</span></div>
+        </div>
+      </div>
+      <div class="login-row">
+        <label class="remember"><input type="checkbox" checked> 记住账号</label>
+        <span class="forget">默认密码见下方测试账号</span>
+      </div>
+      <button type="submit" class="btn-login" id="btnLogin">
+        <span>登 录 系 统</span>
+      </button>
+      <div class="login-msg" id="loginMsg"></div>
+    </form>
+
+    <div class="test-accounts">
+      <div class="ta-title">内置测试账号（点击可快速填充）</div>
+      <div class="ta-item" data-u="admin" data-p="admin123">
+        <span class="ta-tag tag-admin">管理员</span>
+        <span class="ta-user">admin / admin123</span>
+        <em>全部权限 · 双视图</em>
+      </div>
+      <div class="ta-item" data-u="ops" data-p="ops123">
+        <span class="ta-tag tag-ops">运维人员</span>
+        <span class="ta-user">ops / ops123</span>
+        <em>能耗数据可编辑 · 套筒只读</em>
+      </div>
+      <div class="ta-item" data-u="accept" data-p="accept123">
+        <span class="ta-tag tag-accept">工程验收</span>
+        <span class="ta-user">accept / accept123</span>
+        <em>套筒可录入 · 能耗只读</em>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="login-footer">© 2026 居安智卫 · 融合结构安全感知的AI建筑低碳能源智慧管理平台 | 课题答辩演示系统</div>
+
+<script src="assets/js/login.js"></script>
+</body>
+</html>
