@@ -57,9 +57,11 @@ JA.pages = JA.pages || [];
   var modalTitle = document.getElementById('modalTitle');
   var modalBody = document.getElementById('modalBody');
   var modalFooter = document.getElementById('modalFooter');
+  var modalOnClose = null;
   function closeModal() {
     modalMask.classList.remove('show');
     modalBody.innerHTML = ''; modalFooter.innerHTML = '';
+    if (modalOnClose) { var fn = modalOnClose; modalOnClose = null; try { fn(); } catch (e) { console.error(e); } }
   }
   document.getElementById('modalX').onclick = closeModal;
   modalMask.addEventListener('click', function (e) { if (e.target === modalMask) closeModal(); });
@@ -82,6 +84,7 @@ JA.pages = JA.pages || [];
       modalFooter.appendChild(btn);
     });
     modalMask.classList.add('show');
+    modalOnClose = opt.onClose || null;
     if (opt.onOpen) opt.onOpen(modalBody);
     return { close: closeModal, body: modalBody };
   }
@@ -255,13 +258,28 @@ JA.pages = JA.pages || [];
   };
 
   /* ---------------- 侧边导航与路由 ---------------- */
+  /* ---------------- 角色权限矩阵（视图 / 页面白名单 / 默认首页） ---------------- */
+  var ROLE_CFG = {
+    admin:  { views: ['ops', 'build'], pages: null, home: { ops: 'dashboard', build: 'site' } },
+    ops:    { views: ['ops'], home: { ops: 'equipment' },
+              pages: ['dashboard', 'twin', 'orders', 'reports',
+                      'energy', 'collect', 'environment', 'equipment', 'carbon',
+                      'ai', 'control', 'alerts'] },
+    accept: { views: ['build'], home: { build: 'sleeves' },
+              pages: ['site', 'sleeves', 'sleeve-ai', 'build-orders', 'build-report', 'build-settings'] }
+  };
+  var roleCfg = ROLE_CFG[JA.role] || ROLE_CFG.admin;
+
   var sidebar = document.getElementById('sidebar');
   var content = document.getElementById('content');
   var current = { dispose: null, id: null };
 
   function pagesOf(view) {
-    return JA.pages.filter(function (p) { return p.view === view; });
+    return JA.pages.filter(function (p) {
+      return p.view === view && (!roleCfg.pages || roleCfg.pages.indexOf(p.id) >= 0);
+    });
   }
+  function roleHome(view) { return (roleCfg.home && roleCfg.home[view]) || (view === 'ops' ? 'dashboard' : 'site'); }
   function renderNav(view) {
     var groups = {};
     pagesOf(view).forEach(function (p) {
@@ -281,9 +299,11 @@ JA.pages = JA.pages || [];
   }
 
   function go(view, pageId, param) {
+    // 角色视图边界：无权视图回退到角色默认视图
+    if (roleCfg.views.indexOf(view) < 0) { view = roleCfg.views[0]; pageId = null; }
     var all = pagesOf(view);
     var page = all.filter(function (p) { return p.id === pageId; })[0];
-    if (!page) { page = all[0]; pageId = page ? page.id : null; }
+    if (!page) { page = all.filter(function (p) { return p.id === roleHome(view); })[0] || all[0]; pageId = page ? page.id : null; }
     if (!page) { content.innerHTML = '<div style="padding:40px;color:#ff8299">视图「' + view + '」暂无可用页面</div>'; return; }
     // 切换视图
     document.querySelectorAll('#viewSwitch .vs-item').forEach(function (t) {
@@ -307,12 +327,11 @@ JA.pages = JA.pages || [];
   }
   JA.go = go;
 
-  /* 视图切换 */
+  /* 视图切换：按角色隐藏无权视图标签，并锁定切换行为 */
   document.querySelectorAll('#viewSwitch .vs-item').forEach(function (t) {
-    t.onclick = function () {
-      var v = t.getAttribute('data-view');
-      go(v, v === 'ops' ? 'dashboard' : 'site');
-    };
+    var v = t.getAttribute('data-view');
+    if (roleCfg.views.indexOf(v) < 0) { t.style.display = 'none'; return; }
+    t.onclick = function () { go(v, roleHome(v)); };
   });
 
   /* 3D 定位跳转（告警列表→孪生页） */
@@ -358,11 +377,11 @@ JA.pages = JA.pages || [];
   document.getElementById('tbAlertNum').textContent =
     JA.Store.state.alerts.filter(function (a) { return a.active; }).length;
 
-  /* ---------------- 启动：按角色进入默认视图 ---------------- */
+  /* ---------------- 启动：按角色进入默认首页 ---------------- */
   var hash = (location.hash || '').replace(/^#\//, '');
   var parts = hash.split('/');
-  var defaultView = JA.role === 'accept' ? 'build' : 'ops';
-  var view = parts[0] === 'ops' || parts[0] === 'build' ? parts[0] : defaultView;
-  var pageId = parts[1] || (view === 'ops' ? 'dashboard' : 'site');
+  var defaultView = roleCfg.views[0];
+  var view = roleCfg.views.indexOf(parts[0]) >= 0 ? parts[0] : defaultView;
+  var pageId = parts[1] && pagesOf(view).some(function (p) { return p.id === parts[1]; }) ? parts[1] : roleHome(view);
   go(view, pageId);
 })();

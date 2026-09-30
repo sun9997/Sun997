@@ -29,11 +29,11 @@
   function tableWrap() { var w = h('div', 'tbl-wrap'); return w; }
 
   JA.registerPage({
-    id: 'carbon', view: 'ops', group: '低碳分析', name: '碳排放数据', icon: 'energy',
+    id: 'carbon', view: 'ops', group: '智能能源管理', name: '碳排放数据', icon: 'energy',
     render: function (el) {
       var ctx = pageCtx();
       el.innerHTML = pageHead('全生命周期碳排放数据中台 · 天津典型绿色办公建筑 LCA 实测',
-        '低碳分析 / 碳排放数据',
+        '智能能源管理 / 碳排放数据',
         '<button class="btn btn-sm" id="btnGoReport">碳足迹报告 →</button>');
 
       var strip = h('div', 'metric-strip mb12'); el.appendChild(strip);

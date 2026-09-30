@@ -1,5 +1,5 @@
 /* =====================================================================
- * 居安智卫 —— 工单与验收 / 报告中心 / 系统设置
+ * 居安智卫 —— 工单与验收 / 报告中心 / 设置
  * ===================================================================== */
 (function () {
   'use strict';
@@ -77,13 +77,317 @@
   }
 
   /* ================================================================
-   * 工单与验收（长期运维 / 施工视图共用）
+   * 智慧能源运维 · 工单与验收 → 能源能耗管理
+   * （能耗异常工单 / 能耗审计记录 / 节能优化措施 / 能耗考核指标）
+   * ================================================================ */
+  function eoStatusTag(st) {
+    return ({
+      '待处理': '<span class="tag tag-red">待处理</span>',
+      '处理中': '<span class="tag tag-yellow">处理中</span>',
+      '已闭环': '<span class="tag tag-green">已闭环</span>'
+    })[st] || st;
+  }
+  function eoResultTag(r) {
+    return ({
+      '已优化': '<span class="tag tag-green">已优化</span>',
+      '已核实': '<span class="tag tag-blue">已核实</span>',
+      '已排除': '<span class="tag tag-grey">已排除</span>'
+    })[r] || '<span class="muted">—</span>';
+  }
+  function eoTypeTag(t) {
+    var cls = ({ '电': 'tag-blue', '水': 'tag-green', '气': 'tag-yellow', '冷热量': 'tag-purple' })[t] || 'tag-grey';
+    return '<span class="tag ' + cls + '">' + t + '</span>';
+  }
+  function measureTag(st) {
+    return ({
+      '待实施': '<span class="tag tag-grey">待实施</span>',
+      '实施中': '<span class="tag tag-yellow">实施中</span>',
+      '已完成': '<span class="tag tag-green">已完成</span>'
+    })[st] || st;
+  }
+
+  function renderEnergyOpsPage(el) {
+    var ctx = pageCtx();
+    el.innerHTML = pageHead('能耗异常工单与节能管理', '智慧能源运维 / 工单与验收',
+      '<button class="btn btn-primary btn-sm" id="eoCreate">+ 创建能耗工单</button>');
+
+    /* 顶部筛选区 */
+    var pFilter = panel('筛选查询', '筛选条件实时联动下方台账与指标');
+    pFilter.bd.innerHTML =
+      '<div class="form-row">' +
+        '<div class="form-item"><label>时间范围</label><select class="sel" id="fTime">' +
+          '<option value="all">全部时间</option><option value="today">今日</option>' +
+          '<option value="7">近7天</option><option value="30">近30天</option><option value="month">本月</option></select></div>' +
+        '<div class="form-item"><label>能耗类型</label><select class="sel" id="fType">' +
+          '<option value="all">全部</option><option>电</option><option>水</option><option>气</option><option>冷热量</option></select></div>' +
+        '<div class="form-item"><label>工单状态</label><select class="sel" id="fStatus">' +
+          '<option value="all">全部</option><option>待处理</option><option>处理中</option><option>已闭环</option></select></div>' +
+        '<div class="form-item"><label>异常类型</label><select class="sel" id="fAnom">' +
+          '<option value="all">全部</option><option>超预算</option><option>峰值异常</option>' +
+          '<option>设备能耗突增</option><option>区域能耗异常</option></select></div>' +
+        '<div class="form-item" style="flex:1.5"><label>区域 / 设备</label>' +
+          '<input class="inp" id="fKw" placeholder="输入楼层、区域或设备名称关键词"></div>' +
+      '</div>';
+    el.appendChild(pFilter.el);
+
+    /* 三类台账 Tab */
+    var tabs = h('div', 'tabs mb12');
+    tabs.innerHTML = ['orders', 'audits', 'measures'].map(function (t, i) {
+      var name = { orders: '能耗异常工单', audits: '能耗审计记录', measures: '节能优化措施' }[t];
+      return '<div class="tab ' + (i === 0 ? 'on' : '') + '" data-t="' + t + '">' + name + '</div>';
+    }).join('');
+    el.appendChild(tabs);
+    var pTbl = panel('能耗异常工单台账（发现 → 处理 → 闭环）');
+    var tw = h('div', 'tbl-wrap'); pTbl.bd.appendChild(tw); el.appendChild(pTbl.el);
+
+    /* 能耗考核指标 */
+    var pKpi = panel('能耗考核指标', '绑定建筑面积 20183㎡ · 华北电网因子 0.8843 kgCO₂/kWh 实时重算');
+    var kpiGrid = h('div', 'metric-strip'); pKpi.bd.appendChild(kpiGrid); el.appendChild(pKpi.el);
+
+    /* 底部关键指标卡片 */
+    var strip = h('div', 'metric-strip mt12'); el.appendChild(strip);
+
+    var tab = 'orders';
+    function F(id) { return document.getElementById(id); }
+    function inTime(dateStr) {
+      var v = F('fTime').value;
+      if (v === 'all') return true;
+      var d = new Date(dateStr.replace(' ', 'T'));
+      var nowD = new Date();
+      if (v === 'today') return d.toDateString() === nowD.toDateString();
+      if (v === 'month') return d.getFullYear() === nowD.getFullYear() && d.getMonth() === nowD.getMonth();
+      return (nowD - d) <= (+v) * 86400000;
+    }
+    function kwHit(text) {
+      var k = F('fKw').value.trim();
+      return !k || (text || '').indexOf(k) >= 0;
+    }
+
+    function filteredOrders() {
+      return S().energyOrders.filter(function (o) {
+        return (F('fType').value === 'all' || o.energyType === F('fType').value) &&
+          (F('fStatus').value === 'all' || o.status === F('fStatus').value) &&
+          (F('fAnom').value === 'all' || o.anomalyType === F('fAnom').value) &&
+          inTime(o.created) && kwHit(o.target + o.desc);
+      });
+    }
+
+    function renderTable() {
+      if (tab === 'orders') {
+        pTbl.el.querySelector('.panel-hd h3').textContent = '能耗异常工单台账（发现 → 处理 → 闭环）';
+        var rows = filteredOrders();
+        tw.innerHTML = '<table class="tbl"><thead><tr>' +
+          '<th>工单编号</th><th>能耗类型</th><th>异常类型</th><th>关联设备/区域</th>' +
+          '<th>能耗值</th><th>基准值</th><th>偏差比例</th><th>工单状态</th><th>处理结果</th><th>操作</th>' +
+          '</tr></thead><tbody>' +
+          (rows.length ? rows.map(function (o) {
+            var acts = '';
+            if (o.status === '待处理') acts += '<button class="btn btn-sm" data-act="take">受理</button> ';
+            if (o.status !== '已闭环') acts += '<button class="btn btn-success btn-sm" data-act="close">处理闭环</button>';
+            return '<tr><td class="num" style="font-size:11px">' + o.id + '</td>' +
+              '<td>' + eoTypeTag(o.energyType) + '</td><td>' + o.anomalyType + '</td>' +
+              '<td style="font-size:11px;max-width:210px">' + o.target + '</td>' +
+              '<td class="num">' + o.value + ' ' + o.unit + '</td><td class="num">' + o.base + ' ' + o.unit + '</td>' +
+              '<td class="num" style="color:' + (o.dev > 20 ? '#ff4d6a' : '#ffc83d') + '">+' + o.dev.toFixed(1) + '%</td>' +
+              '<td>' + eoStatusTag(o.status) + '</td><td>' + eoResultTag(o.result) + '</td>' +
+              '<td style="white-space:nowrap">' + (acts || '<span class="tag tag-green">已闭环</span>') + '</td></tr>';
+          }).join('') : '<tr><td colspan="10" style="text-align:center;color:var(--txt3);padding:18px">当前筛选条件下无异常工单</td></tr>') +
+          '</tbody></table>';
+        tw.querySelectorAll('[data-act]').forEach(function (b) {
+          b.onclick = function () {
+            var id = b.closest('tr').querySelector('.num').textContent;
+            var o = S().energyOrders.filter(function (x) { return x.id === id; })[0];
+            if (b.getAttribute('data-act') === 'take') {
+              JA.Store.updateEnergyOrder(o.id, { status: '处理中' });
+              JA.toast('工单 ' + o.id + ' 已受理，转入处理中', 'success');
+            } else openClose(o);
+          };
+        });
+      } else if (tab === 'audits') {
+        pTbl.el.querySelector('.panel-hd h3').textContent = '能耗审计记录（基准对比 · 节能率核算）';
+        var rows2 = S().energyAudits.filter(function (a) { return inTime(a.time) && kwHit(a.object + a.reason); });
+        tw.innerHTML = '<table class="tbl"><thead><tr>' +
+          '<th>审计编号</th><th>审计对象</th><th>对象类型</th><th>审计周期</th>' +
+          '<th>基准能耗</th><th>实际能耗</th><th>节能率</th><th>异常原因分析</th><th>审计结论</th>' +
+          '</tr></thead><tbody>' +
+          (rows2.length ? rows2.map(function (a) {
+            var ok = a.saveRate >= 0;
+            return '<tr><td class="num" style="font-size:11px">' + a.id + '</td>' +
+              '<td>' + a.object + '</td><td><span class="tag tag-blue">' + a.objType + '</span></td>' +
+              '<td>' + a.period + '</td>' +
+              '<td class="num">' + a.base + ' kWh</td><td class="num">' + a.actual + ' kWh</td>' +
+              '<td class="num" style="color:' + (ok ? '#21e6a4' : '#ff4d6a') + '">' + (ok ? '' : '-') + Math.abs(a.saveRate).toFixed(1) + '%</td>' +
+              '<td style="font-size:11px;max-width:230px">' + a.reason + '</td>' +
+              '<td>' + (a.conclusion.indexOf('未达标') >= 0 ? '<span class="tag tag-red">' + a.conclusion + '</span>'
+                : a.conclusion.indexOf('超额') >= 0 ? '<span class="tag tag-green">' + a.conclusion + '</span>'
+                : '<span class="tag tag-yellow">' + a.conclusion + '</span>') + '</td></tr>';
+          }).join('') : '<tr><td colspan="9" style="text-align:center;color:var(--txt3);padding:18px">当前筛选条件下无审计记录</td></tr>') +
+          '</tbody></table>';
+      } else {
+        pTbl.el.querySelector('.panel-hd h3').textContent = '节能优化措施（措施 → 实施 → 成效登记）';
+        var rows3 = S().energyMeasures.filter(function (m) { return kwHit(m.name + m.target); });
+        tw.innerHTML = '<table class="tbl"><thead><tr>' +
+          '<th>措施编号</th><th>措施名称</th><th>关联设备/区域</th><th>实施时间</th>' +
+          '<th>预期节能率</th><th>实际节能率</th><th>状态</th><th>操作</th>' +
+          '</tr></thead><tbody>' +
+          (rows3.length ? rows3.map(function (m) {
+            var acts = '';
+            if (m.status === '待实施') acts = '<button class="btn btn-sm" data-act="start">启动实施</button>';
+            else if (m.status === '实施中') acts = '<button class="btn btn-success btn-sm" data-act="done">登记成效</button>';
+            return '<tr><td class="num" style="font-size:11px">' + m.id + '</td>' +
+              '<td>' + m.name + '</td><td style="font-size:11px;max-width:220px">' + m.target + '</td>' +
+              '<td class="fs11">' + m.startTime + '</td>' +
+              '<td class="num">' + m.expectRate.toFixed(1) + '%</td>' +
+              '<td class="num" style="color:#21e6a4">' + (m.actualRate == null ? '—' : m.actualRate.toFixed(1) + '%') + '</td>' +
+              '<td>' + measureTag(m.status) + '</td>' +
+              '<td style="white-space:nowrap">' + (acts || '<span class="tag tag-green">已完成</span>') + '</td></tr>';
+          }).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--txt3);padding:18px">当前筛选条件下无节能措施</td></tr>') +
+          '</tbody></table>';
+        tw.querySelectorAll('[data-act]').forEach(function (b) {
+          b.onclick = function () {
+            var id = b.closest('tr').querySelector('.num').textContent;
+            var m = S().energyMeasures.filter(function (x) { return x.id === id; })[0];
+            if (b.getAttribute('data-act') === 'start') {
+              JA.Store.updateEnergyMeasure(m.id, { status: '实施中' });
+              JA.toast('措施「' + m.name + '」已启动实施', 'success');
+            } else openMeasureDone(m);
+          };
+        });
+      }
+    }
+
+    function openClose(o) {
+      JA.modal({
+        title: '处理能耗异常工单 · ' + o.id, width: '560px',
+        body: '<div style="line-height:1.9;font-size:12.5px;color:var(--txt2)">关联对象：<b style="color:#dff1ff">' + o.target + '</b><br>' +
+          '异常类型：' + o.anomalyType + '　偏差：+' + o.dev.toFixed(1) + '%（' + o.value + ' / 基准 ' + o.base + ' ' + o.unit + '）</div>' +
+          '<div class="form-item mt12"><label>处理结果 <span style="color:#ff4d6a">*</span></label><select class="sel" id="eoResult">' +
+          '<option>已优化</option><option>已核实</option><option>已排除</option></select></div>',
+        buttons: [
+          { text: '取消' },
+          { text: '提交并闭环', primary: true, handler: function (c, bd) {
+            var r = bd.querySelector('#eoResult').value;
+            JA.Store.updateEnergyOrder(o.id, { result: r });
+            JA.toast('工单 ' + o.id + ' 已闭环（' + r + '）', 'success');
+          } }
+        ]
+      });
+    }
+    function openMeasureDone(m) {
+      JA.modal({
+        title: '登记节能成效 · ' + m.id, width: '520px',
+        body: '<div style="line-height:1.9;font-size:12.5px;color:var(--txt2)">措施：<b style="color:#dff1ff">' + m.name + '</b><br>' +
+          '关联对象：' + m.target + '　预期节能率：' + m.expectRate.toFixed(1) + '%</div>' +
+          '<div class="form-item mt12"><label>实际节能率 (%) <span style="color:#ff4d6a">*</span></label>' +
+          '<input class="inp" id="meRate" type="number" step="0.1" min="0" max="100" placeholder="按实测能耗对比基准核算"></div>',
+        buttons: [
+          { text: '取消' },
+          { text: '提交成效', primary: true, handler: function (c, bd) {
+            var v = bd.querySelector('#meRate').value;
+            if (v === '' || isNaN(+v)) { JA.toast('请填写实际节能率', 'warn'); return false; }
+            JA.Store.updateEnergyMeasure(m.id, { actualRate: +v });
+            JA.toast('措施「' + m.name + '」成效已登记，状态完成', 'success');
+          } }
+        ]
+      });
+    }
+
+    /* 能耗考核指标（实时公式重算） */
+    function renderKpi() {
+      var k = JA.Store.kpis();
+      var ek = S().energyKpi;
+      var annualKwh = S().lca.totals.annual * 1000 / 0.8843;   // 年运行能耗 kWh（年碳排放/电网因子）
+      var perArea = annualKwh / k.area;                        // 单位面积能耗
+      var perCap = annualKwh / ek.staff;                       // 人均能耗
+      var budgetRate = ek.monthActual / ek.monthBudget * 100;  // 预算完成率
+      var renewRate = S().pv.year1Gen / annualKwh * 100;       // 可再生能源消纳率
+      var done = S().energyMeasures.filter(function (m) { return m.actualRate != null; });
+      var avgSave = done.length ? done.reduce(function (a, m) { return a + m.actualRate; }, 0) / done.length : 0;
+      var targetRate = avgSave / (S().params.saveRate * 100) * 100;  // 节能目标完成率
+      kpiGrid.innerHTML = [
+        ['单位面积能耗', perArea.toFixed(1) + ' kWh/㎡·a', '年口径 · 按电网因子折算', 'good'],
+        ['人均能耗', Math.round(perCap) + ' kWh/人·a', '核定人数 ' + ek.staff + ' 人', 'good'],
+        ['能耗预算完成率', budgetRate.toFixed(1) + '%', '当月 ' + ek.monthActual + ' / 预算 ' + ek.monthBudget + ' kWh', budgetRate <= 100 ? 'good' : 'bad'],
+        ['可再生能源消纳率', renewRate.toFixed(1) + '%', 'BIPV首年发电量 / 年运行能耗', 'good'],
+        ['节能目标完成率', targetRate.toFixed(1) + '%', '实际节能 ' + avgSave.toFixed(1) + '% / 目标 ' + (S().params.saveRate * 100).toFixed(0) + '%', targetRate >= 80 ? 'good' : 'warn']
+      ].map(function (m) {
+        return '<div class="metric ' + m[3] + '"><b>' + m[1] + '</b><span>' + m[0] + ' · ' + m[2] + '</span></div>';
+      }).join('');
+    }
+
+    /* 底部关键指标卡片 */
+    function renderStrip() {
+      var all = S().energyOrders;
+      var closed = all.filter(function (o) { return o.status === '已闭环'; }).length;
+      var done = S().energyMeasures.filter(function (m) { return m.actualRate != null; });
+      var avgSave = done.length ? done.reduce(function (a, m) { return a + m.actualRate; }, 0) / done.length : 0;
+      var ek = S().energyKpi;
+      var budgetRate = ek.monthActual / ek.monthBudget * 100;
+      var open = all.length - closed;
+      strip.innerHTML = [
+        ['能耗异常工单数', all.length + ' 单', '待处理/处理中 ' + open + ' 单', open ? 'bad' : 'good'],
+        ['已闭环数', closed + ' 单', '闭环率 ' + (all.length ? Math.round(closed / all.length * 100) : 0) + '%', 'good'],
+        ['平均节能率', avgSave.toFixed(1) + '%', '按已登记成效的节能措施核算', 'good'],
+        ['预算完成率', budgetRate.toFixed(1) + '%', '当月累计 / 月度预算', budgetRate <= 100 ? 'good' : 'bad']
+      ].map(function (m) {
+        return '<div class="metric ' + m[3] + '"><b>' + m[1] + '</b><span>' + m[0] + ' · ' + m[2] + '</span></div>';
+      }).join('');
+    }
+
+    document.getElementById('eoCreate').onclick = function () {
+      JA.modal({
+        title: '创建能耗异常工单', width: '640px',
+        body: '<div class="form-row"><div class="form-item"><label>能耗类型</label><select class="sel" id="eoType">' +
+            '<option>电</option><option>水</option><option>气</option><option>冷热量</option></select></div>' +
+          '<div class="form-item"><label>异常类型</label><select class="sel" id="eoAnom">' +
+            '<option>超预算</option><option>峰值异常</option><option>设备能耗突增</option><option>区域能耗异常</option></select></div></div>' +
+          '<div class="form-item" style="flex:1;min-width:100%"><label>关联设备/区域 <span class="req">*</span></label>' +
+            '<input class="inp" id="eoTarget" placeholder="如：3F 智慧指挥中心 / 精密空调 CRAC-403"></div>' +
+          '<div class="form-row"><div class="form-item"><label>能耗值 <span class="req">*</span></label><input class="inp" id="eoValue" type="number" step="0.1"></div>' +
+          '<div class="form-item"><label>基准值 <span class="req">*</span></label><input class="inp" id="eoBase" type="number" step="0.1"></div>' +
+          '<div class="form-item"><label>单位</label><select class="sel" id="eoUnit"><option>kWh</option><option>m³</option></select></div></div>' +
+          '<div class="form-item" style="flex:1;min-width:100%"><label>异常描述 <span class="req">*</span></label>' +
+            '<textarea class="inp" id="eoDesc" placeholder="请描述异常现象、影响范围…"></textarea></div>',
+        buttons: [
+          { text: '取消' },
+          { text: '创建并派发', primary: true, handler: function (c, bd) {
+            var target = bd.querySelector('#eoTarget').value.trim();
+            var value = +bd.querySelector('#eoValue').value;
+            var base = +bd.querySelector('#eoBase').value;
+            var desc = bd.querySelector('#eoDesc').value.trim();
+            if (!target || !desc || !(value > 0) || !(base > 0)) { JA.toast('请完整填写对象、能耗值、基准值与描述', 'warn'); return false; }
+            JA.Store.createEnergyOrder({
+              energyType: bd.querySelector('#eoType').value, anomalyType: bd.querySelector('#eoAnom').value,
+              target: target, value: value, base: base, unit: bd.querySelector('#eoUnit').value, desc: desc
+            });
+            JA.toast('能耗异常工单已创建并派发', 'success');
+          } }
+        ]
+      });
+    };
+
+    ['fTime', 'fType', 'fStatus', 'fAnom'].forEach(function (id) { F(id).onchange = renderTable; });
+    F('fKw').oninput = renderTable;
+    tabs.querySelectorAll('.tab').forEach(function (t) {
+      t.onclick = function () {
+        tabs.querySelectorAll('.tab').forEach(function (x) { x.classList.remove('on'); });
+        t.classList.add('on'); tab = t.getAttribute('data-t'); renderTable();
+      };
+    });
+    renderStrip(); renderTable(); renderKpi();
+    ctx.sub(function () { renderStrip(); renderTable(); renderKpi(); });
+    return ctx.done();
+  }
+
+  /* ================================================================
+   * 工单与验收（施工视图：结构整改闭环）
    * ================================================================ */
   JA.renderOrdersPage = function (el, opts) {
     opts = opts || {};
+    if (!opts.structural) return renderEnergyOpsPage(el);   // 智慧能源运维：能源能耗管理
     var ctx = pageCtx();
-    el.innerHTML = pageHead(opts.structural ? '结构整改工单与验收闭环' : '整改工单与验收闭环',
-      (opts.structural ? '施工阶段视图' : '长期运维视图') + ' / 工单与验收',
+    el.innerHTML = pageHead(opts.structural ? '结构整改工单与整改工单' : '整改工单与整改工单',
+      (opts.structural ? '智能节点感知' : '智慧能源运维') + ' / 整改工单',
       '<button class="btn btn-primary btn-sm" id="woCreate">+ 创建整改工单</button>');
 
     var strip = h('div', 'metric-strip mb12'); el.appendChild(strip);
@@ -141,7 +445,7 @@
           var act = b.getAttribute('data-act');
           if (act === 'result') openResult(o);
           else if (act === 'accept') openAccept(o);
-          else if (act === 'report') showReport('分项工程验收报告 · ' + o.id, acceptanceReport(o));
+          else if (act === 'report') showReport('套筒验收报告 · ' + o.id, acceptanceReport(o));
         };
       });
     }
@@ -177,7 +481,7 @@
             JA.Store.updateOrder(o.id, { accept: r });
             JA.toast('验收结论：' + r + '，工单已闭环', r === '合格' ? 'success' : 'error');
             if (o.type === '结构整改' && r === '合格') {
-              setTimeout(function () { showReport('分项工程验收报告 · ' + o.id, acceptanceReport(JA.Store.state.orders.filter(function (x) { return x.id === o.id; })[0])); }, 350);
+              setTimeout(function () { showReport('套筒验收报告 · ' + o.id, acceptanceReport(JA.Store.state.orders.filter(function (x) { return x.id === o.id; })[0])); }, 350);
             }
           } }
         ]
@@ -212,20 +516,18 @@
   JA.renderReportsPage = function (el, opts) {
     opts = opts || {};
     var ctx = pageCtx();
-    el.innerHTML = pageHead('报告中心 · 验收与运营报告', (opts.structural ? '施工阶段视图' : '综合总览') + ' / 报告中心');
+    el.innerHTML = pageHead('报告中心 · 验收与运营报告', (opts.structural ? '智能节点感知' : '综合总览') + ' / 报告中心');
     var grid = h('div', 'grid g-3 mb12');
     var cards = [
-      ['lca-mat', '建材生产运输碳排放分项报告', '18类建材生产（14965.409 tCO₂e）与运输（869.619 tCO₂e）真实测算明细', '低碳分析', materialReport],
-      ['lca-op', '建筑运行碳排放分项报告', '供暖/空调风机/照明/插座设备/电梯/市政热力/设备维护 7项实测碳排放（34356.539 tCO₂）', '低碳分析', operationReport],
-      ['lca-all', '全生命周期碳足迹核算报告', '五阶段占比+绿化碳汇抵扣+单位面积指标，总排放50495.447 tCO₂', '低碳分析', lifecycleReport],
-      ['control', '节能优化效果评估报告', '建筑侧四维减碳+光储侧调控，综合节能优化有效率10%-40%', '低碳分析', savingReport],
-      ['pv', '光伏充电站发电量与效益分析报告', 'BIPV覆盖率30%、储能240kW/500kWh、25年发电量衰减与减碳收益', '低碳分析', pvReport],
+      ['lca-op', '建筑运行碳排放分项报告', '仅运维阶段口径：按供暖/空调/照明/动力四类分类展示运行碳排放（年合计约3.44万 tCO₂）', '智能能源管理', operationReport],
+      ['control', '节能优化效果评估报告', '建筑侧四维减碳+光储侧调控，综合节能效率10%-40%', '智能能源管理', savingReport],
+      ['pv', '光伏充电站发电量与效益分析报告', 'BIPV覆盖率30%、储能240kW/500kWh、25年发电量衰减与减碳收益', '智能能源管理', pvReport],
       ['device-alert', '设备异常与整改工单报告', '异常能耗/无人空耗/设备故障/套筒应力超限告警与整改工单闭环记录', '安全闭环', alertOrderReport],
-      ['report', '分项工程验收报告', '套筒灌浆节点缺陷整改闭环后自动生成，含监测依据与四方签章', '结构验收', function () {
+      ['report', '套筒验收报告', '套筒灌浆节点缺陷整改工单闭环后自动生成，含监测依据与四方签章', '结构验收', function () {
         var done = S().orders.filter(function (o) { return o.type === '结构整改'; });
         if (!done.length) { JA.toast('暂无结构整改工单', 'warn'); return; }
         var o = done[0];
-        showReport('分项工程验收报告 · ' + o.id, acceptanceReport(o));
+        showReport('套筒验收报告 · ' + o.id, acceptanceReport(o));
       }],
       ['energy', '建筑能源运营日报', '总能耗、分项能耗、异常告警、AI预测准确率与节能成效汇总', '能源运营', energyReport],
       ['device', '设备设施运行日报', '设备在线率、故障与检修工单、调控策略执行情况', '设备设施', deviceReport]
@@ -247,14 +549,14 @@
     p.bd.innerHTML = '<table class="tbl"><thead><tr><th>报告编号</th><th>报告名称</th><th>关联工单</th><th>验收结论</th><th>生成时间</th><th>操作</th></tr></thead><tbody>' +
       stOrders.map(function (o) {
         return '<tr><td class="num" style="font-size:11px">' + o.id.replace('WO', 'RPT') + '</td>' +
-          '<td>分项工程验收报告</td><td>' + o.id + '</td><td>' + acceptTag(o.accept) + '</td>' +
+          '<td>套筒验收报告</td><td>' + o.id + '</td><td>' + acceptTag(o.accept) + '</td>' +
           '<td class="fs11">' + o.created + '</td>' +
           '<td><button class="btn btn-sm" data-id="' + o.id + '">查看</button></td></tr>';
       }).join('') + '</tbody></table>';
     p.bd.querySelectorAll('button[data-id]').forEach(function (b) {
       b.onclick = function () {
         var o = S().orders.filter(function (x) { return x.id === b.getAttribute('data-id'); })[0];
-        showReport('分项工程验收报告 · ' + o.id, acceptanceReport(o));
+        showReport('套筒验收报告 · ' + o.id, acceptanceReport(o));
       };
     });
     el.appendChild(p.el);
@@ -276,7 +578,7 @@
       '<tr><th>监测建筑</th><td>天津典型绿色办公建筑（20183㎡ / 17层）</td><th>监测房间</th><td>' + k.monitoredRooms + ' 间</td></tr>' +
       '<tr><th>今日累计能耗</th><td>' + tot + ' kWh</td><th>当前在场人数</th><td>' + k.occupancy + ' 人</td></tr>' +
       '<tr><th>活动告警</th><td>' + k.alerts + ' 起（红色 ' + k.redAlerts + '）</td><th>待处理工单</th><td>' + k.orders + ' 单</td></tr>' +
-      '<tr><th>AI预测准确率</th><td>≥92%</td><th>节能优化有效率</th><td>10%-40%</td></tr></table>' +
+      '<tr><th>AI预测准确率</th><td>≥92%</td><th>综合节能效率</th><td>10%-40%</td></tr></table>' +
       '<h4>二、分项能耗（电力排放因子 0.8843 kgCO₂/kWh）</h4><table><tr><th>供暖</th><th>空调风机</th><th>照明</th><th>插座设备</th><th>电梯</th></tr><tr>' +
       '<td>' + he + ' kWh</td><td>' + hv + ' kWh</td><td>' + lt + ' kWh（' + Math.round(lt / tot * 100) + '%）</td>' +
       '<td>' + sk + ' kWh（' + Math.round(sk / tot * 100) + '%）</td><td>' + ev + ' kWh</td></tr></table>' +
@@ -319,55 +621,54 @@
       }).join('') +
       '<tr><th colspan="2">合计</th><th>' + total.toFixed(3) + '</th><th>100%</th></tr></table>';
   }
-  /* 1. 建材生产运输碳排放分项报告 */
-  function materialReport() {
-    var l = S().lca, t = l.totals;
-    var html = rptHead('建材生产运输碳排放分项报告') +
+  /* 1. 建筑运行碳排放分项报告（仅运维阶段：供暖/空调/照明/动力 四类） */
+  function operationReport() {
+    var l = S().lca;
+    var opMap = {};
+    l.operation.forEach(function (m) { opMap[m.name] = m.v; });
+    // 运维阶段四类口径归集（不含建材生产、运输、建造、拆除等建设期排放）
+    var cats = [
+      { name: '供暖碳排放', desc: '市政热力（烟煤II）+ 楼内供暖',
+        items: [['供暖', opMap['供暖']], ['市政热力（烟煤II）', opMap['市政热力烟煤II']]] },
+      { name: '空调碳排放', desc: '冷热源输配 + 空调机组风机用电',
+        items: [['空调风机', opMap['空调风机']]] },
+      { name: '照明碳排放', desc: '全楼照明回路用电',
+        items: [['照明', opMap['照明']]] },
+      { name: '动力碳排放', desc: '插座设备 / 电梯排风机 / 设备安装维护',
+        items: [['插座设备', opMap['插座设备']], ['其他（电梯/排风机）', opMap['其他（电梯/排风机）']], ['设备安装维护', opMap['设备安装维护']]] }
+    ];
+    cats.forEach(function (c) {
+      c.total = c.items.reduce(function (a, x) { return a + x[1]; }, 0);
+    });
+    var grand = cats.reduce(function (a, c) { return a + c.total; }, 0);
+    var html = rptHead('建筑运行碳排放分项报告', '数据口径：仅建筑运维阶段运行碳排放（建设期排放不在统计范围）') +
       '<h4>一、建筑基础信息</h4><table><tr><th>建筑类型</th><td>天津典型绿色办公建筑</td><th>总建筑面积</th><td>20183 ㎡</td></tr>' +
       '<tr><th>地上层数</th><td>17 层</td><th>华北电网碳排放因子</th><td>0.8843 kgCO₂/kWh</td></tr></table>' +
-      '<h4>二、建材生产阶段碳排放（合计 ' + t.production.toFixed(3) + ' tCO₂e）</h4>' + matTable(l.materials, t.production, 'tCO₂e') +
-      '<h4>三、建材运输阶段碳排放（合计 ' + t.transport.toFixed(3) + ' tCO₂e）</h4>' + matTable(l.transport, t.transport, 'tCO₂e') +
-      '<h4>四、阶段汇总</h4><table><tr><th>生产阶段</th><th>运输阶段</th><th>建造阶段</th><th>拆除阶段</th></tr>' +
-      '<tr><td>' + t.production.toFixed(3) + ' tCO₂e</td><td>' + t.transport.toFixed(3) + ' tCO₂e</td><td>' +
-      t.construction.toFixed(3) + ' tCO₂（含临设9.075）</td><td>' + t.demolition.toFixed(3) + ' tCO₂</td></tr></table>' +
-      rptTail();
-    showReport('建材生产运输碳排放分项报告', html);
-  }
-  /* 2. 建筑运行碳排放分项报告 */
-  function operationReport() {
-    var l = S().lca, t = l.totals;
-    var html = rptHead('建筑运行碳排放分项报告') +
-      '<h4>一、运行阶段分项碳排放（年合计 ' + t.operation.toFixed(3) + ' tCO₂）</h4>' + matTable(l.operation, t.operation, 'tCO₂') +
-      '<h4>二、运行特征说明</h4><table><tr><th>电力消耗占比</th><td>占建筑总能耗 80% 以上（华北电网煤电占比超60%）</td></tr>' +
-      '<tr><th>最大用电分项</th><td>插座设备 ' + l.operation[3].v.toFixed(3) + ' tCO₂，其次为照明 ' + l.operation[2].v.toFixed(3) + ' tCO₂</td></tr>' +
-      '<tr><th>热力排放</th><td>市政热力（烟煤II）' + l.operation[5].v.toFixed(3) + ' tCO₂</td></tr>' +
-      '<tr><th>核算依据</th><td>电力排放按华北电网因子 0.8843 kgCO₂/kWh 实时核算</td></tr></table>' +
+      '<h4>二、运维阶段碳排放分类汇总（年合计 ' + grand.toFixed(3) + ' tCO₂）</h4>' +
+      '<table><tr><th>排放类别</th><th>包含分项</th><th>年碳排放量（tCO₂）</th><th>占运维阶段比例</th></tr>' +
+      cats.map(function (c) {
+        return '<tr><td><b>' + c.name + '</b></td><td style="font-size:12px">' + c.desc + '</td>' +
+          '<td class="num strong">' + c.total.toFixed(3) + '</td><td class="num muted">' + (c.total / grand * 100).toFixed(2) + '%</td></tr>';
+      }).join('') +
+      '<tr class="tr-sum"><td colspan="2"><b>运维阶段合计</b></td><td class="num"><b>' + grand.toFixed(3) + '</b></td><td class="num">100%</td></tr></table>' +
+      '<h4>三、分类明细</h4>' +
+      cats.map(function (c) {
+        return '<table style="margin-top:8px"><thead><tr><th colspan="3">' + c.name + '（小计 ' + c.total.toFixed(3) + ' tCO₂）</th></tr>' +
+          '<tr><th>分项</th><th>碳排放量 (tCO₂)</th><th>占该类比例</th></tr></thead><tbody>' +
+          c.items.map(function (x) {
+            return '<tr><td>' + x[0] + '</td><td class="num strong">' + x[1].toFixed(3) + '</td>' +
+              '<td class="num muted">' + (x[1] / c.total * 100).toFixed(2) + '%</td></tr>';
+          }).join('') + '</tbody></table>';
+      }).join('') +
+      '<h4>四、核算说明</h4><table>' +
+      '<tr><th>统计口径</th><td>仅统计建筑运维阶段运行碳排放，建设期各阶段排放不在本报告统计范围内</td></tr>' +
+      '<tr><th>电力排放</th><td>空调/照明/动力等用电分项按华北电网因子 0.8843 kgCO₂/kWh 折算</td></tr>' +
+      '<tr><th>热力排放</th><td>供暖按市政热力（烟煤II）实测消耗量折算，并入供暖碳排放类别</td></tr>' +
+      '<tr><th>最大排放类别</th><td>动力碳排放 ' + cats[3].total.toFixed(3) + ' tCO₂（' + (cats[3].total / grand * 100).toFixed(1) + '%），主要为插座设备用电</td></tr></table>' +
       rptTail();
     showReport('建筑运行碳排放分项报告', html);
   }
-  /* 3. 全生命周期碳足迹核算报告 */
-  function lifecycleReport() {
-    var l = S().lca, t = l.totals, p = l.pct;
-    var rows = [
-      ['建材生产阶段', t.production, p.production], ['建材运输阶段', t.transport, p.transport],
-      ['建造阶段', t.construction, p.construction], ['运营阶段', t.operation, p.operation],
-      ['拆除阶段', t.demolition, p.demolition]
-    ];
-    var html = rptHead('全生命周期碳足迹核算报告') +
-      '<h4>一、各阶段碳排放与占比</h4><table><tr><th>生命周期阶段</th><th>碳排放量（tCO₂）</th><th>占比</th></tr>' +
-      rows.map(function (r) { return '<tr><td>' + r[0] + '</td><td>' + r[1].toFixed(3) + '</td><td>' + r[2] + '%</td></tr>'; }).join('') +
-      '<tr><th>绿化碳汇（单独抵扣）</th><th class="c-green">-' + t.sink.toFixed(3) + '</th><th>单独标注</th></tr>' +
-      '<tr><th>全生命周期总碳排放</th><th>' + t.lifecycle.toLocaleString() + '</th><th>100%</th></tr></table>' +
-      '<h4>二、绿化碳汇明细（合计 ' + t.sink.toFixed(3) + ' tCO₂）</h4>' +
-      '<table><tr><th>绿化类型</th><th>碳汇量（tCO₂）</th></tr>' +
-      l.sinks.map(function (x) { return '<tr><td>' + x.name + '</td><td>' + x.v.toFixed(3) + '</td></tr>'; }).join('') + '</table>' +
-      '<h4>三、单位面积指标（建筑面积 20183 ㎡）</h4><table><tr><th>年碳排放</th><th>单位面积年碳排放</th><th>单位面积累计碳排放</th></tr>' +
-      '<tr><td>' + t.annual + ' tCO₂/a</td><td>' + t.perAreaAnnual + ' kgCO₂/㎡·a</td><td>' + t.perAreaTotal.toLocaleString() + ' kgCO₂/㎡</td></tr></table>' +
-      (l.pctCustom ? '<p style="color:#c05621">注：占比为用户修改数据后系统按公式实时重算结果。</p>' : '') +
-      rptTail();
-    showReport('全生命周期碳足迹核算报告', html);
-  }
-  /* 4. 节能优化效果评估报告 */
+  /* 2. 节能优化效果评估报告 */
   function savingReport() {
     var c = S().control;
     var html = rptHead('节能优化效果评估报告') +
@@ -413,7 +714,7 @@
   /* 6. 设备异常与整改工单报告 */
   function alertOrderReport() {
     var acts = S().alerts, ords = S().orders;
-    var html = rptHead('设备异常与整改工单报告', '异常预警规则引擎 + 整改工单与验收闭环') +
+    var html = rptHead('设备异常与整改工单报告', '异常预警规则引擎 + 整改工单与整改工单') +
       '<h4>一、异常告警统计</h4><table><tr><th>活动告警</th><th>红色告警</th><th>已闭环</th></tr>' +
       '<tr><td>' + acts.filter(function (a) { return a.active; }).length + ' 起</td><td>' +
       acts.filter(function (a) { return a.active && a.level === '告警'; }).length + ' 起</td><td>' +
@@ -439,14 +740,14 @@
   });
 
   /* ================================================================
-   * 系统设置（管理员）
+   * 设置（管理员）
    * ================================================================ */
   JA.registerPage({
-    id: 'settings', view: 'ops', group: '系统管理', name: '系统设置', icon: 'setting',
+    id: 'settings', view: 'ops', group: '设置', name: '设置', icon: 'setting',
     render: function (el) {
       var ctx = pageCtx();
       var admin = JA.perm.isAdmin;
-      el.innerHTML = pageHead('系统设置 · 用户权限 / 阈值参数 / 演示数据', '长期运维视图 / 系统管理');
+      el.innerHTML = pageHead('设置 · 用户权限 / 阈值参数 / 演示数据', '智慧能源运维 / 设置');
 
       if (!admin) {
         var deny = panel('权限受限');
@@ -481,15 +782,17 @@
         '<div class="form-hint">例如把红色阈值调低至 80kWh，将立即看到更多房间变红并触发告警；调高至 130kWh 则告警解除、3D恢复绿色。</div>';
       el.appendChild(pParam.el);
 
-      /* 数据管理 */
-      var pData = panel('模拟数据管理（课题答辩演示）');
+      /* 演示数据（一键重置 + 演示数据标识） */
+      var pData = panel('演示数据');
       pData.bd.innerHTML =
-        '<div class="grid g-3" style="gap:10px">' +
-        '<div class="metric"><b>16 间</b><span>监测房间模拟数据</span></div>' +
-        '<div class="metric"><b>12 个</b><span>套筒节点模拟数据</span></div>' +
-        '<div class="metric"><b>9 类</b><span>典型场景内置</span></div></div>' +
-        '<div class="fs11 muted mt12" style="line-height:1.9">内置场景：正常用能 / 高能耗异常 / 无人空耗 / 设备故障 / 温湿度变化 / 人员密度变化 / AI负荷预测变化 / 套筒应力正常 / 套筒应力超限告警。</div>' +
-        '<button class="btn btn-danger mt12" id="btnReset">一键重置全部演示数据</button>';
+        '<div style="display:flex;align-items:stretch;gap:16px;flex-wrap:wrap">' +
+          '<button class="btn btn-primary" id="btnReset" style="padding:14px 42px;font-size:15px;letter-spacing:2px">一键重置</button>' +
+          '<div style="flex:1;min-width:240px;display:flex;align-items:center;justify-content:center;' +
+            'background:rgba(255,45,85,.14);border:1px solid rgba(255,45,85,.6);border-radius:8px;' +
+            'box-shadow:inset 0 0 18px rgba(255,45,85,.22),0 0 12px rgba(255,45,85,.18);' +
+            'color:#ff8fa3;font-size:15px;font-weight:700;letter-spacing:4px;padding:14px 18px">全部演示数据</div>' +
+        '</div>' +
+        '<div class="form-hint mt12">点击「一键重置」将全部演示数据恢复为初始状态，不影响页面结构与系统参数。</div>';
       el.appendChild(pData.el);
 
       function renderUsers() {
@@ -556,7 +859,7 @@
       document.getElementById('btnReset').onclick = function () {
         JA.modal({
           title: '重置演示数据', width: '420px',
-          body: '<div style="padding:8px 4px;color:var(--txt2)">将清除会话期间新增/修改的数据并恢复系统内置模拟场景，确定继续？</div>',
+          body: '<div style="padding:8px 4px;color:var(--txt2)">确认将全部演示数据恢复为初始状态？</div>',
           buttons: [
             { text: '取消' },
             { text: '确认重置', type: 'btn-danger', handler: function () { JA.Store.reset(); } }

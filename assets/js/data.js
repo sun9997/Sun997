@@ -112,31 +112,84 @@ JA.registerPage = function (p) { JA.pages.push(p); };
     elevator: prof.map(function (v) { return Math.round(v * 0.08 + rnd(-1, 1)); })
   };
 
-  /* ---------------- 设备台账 ---------------- */
+  /* ---------------- 设备台账（17层中型办公楼，60台，2台故障/2台待机/56台运行） ---------------- */
   var deviceDefs = [
-    ['AC-201', '空调机组 AHU-201', '空调', 'R-201'], ['AC-301', '空调机组 AHU-301', '空调', 'R-301'],
-    ['AC-302', '中央空调 AHU-302', '空调', 'R-302'], ['AC-203', '恒温恒湿机组', '空调', 'R-203'],
-    ['AC-402', '变风量空调 VAV-402', '空调', 'R-402'], ['AC-102', '空调机组 AHU-102', '空调', 'R-102'],
-    ['AC-403', '精密空调 CRAC-403', '空调', 'R-403'], ['AC-401', '多联机外机', '空调', 'R-401'],
-    ['LT-201', '照明回路 L-2F东', '照明', 'R-201'], ['LT-302', '照明回路 L-指挥中心', '照明', 'R-302'],
-    ['LT-402', '照明回路 L-大会议室', '照明', 'R-402'], ['LT-101', '公共照明 L-门厅', '照明', 'R-101'],
-    ['LT-301', '照明回路 L-3F西', '照明', 'R-301'], ['LT-203', '实验区专用照明', '照明', 'R-203'],
-    ['EL-01', '1#客梯', '电梯', 'R-204'], ['EL-02', '2#客梯(消防梯)', '电梯', 'R-304'],
-    ['FA-302', '新风机组 FA-302', '新风', 'R-302'], ['FA-201', '新风机组 FA-201', '新风', 'R-201'],
-    ['UPS-403', 'UPS不间断电源', '配电', 'R-403'], ['PW-103', '智能配电柜 PDU-1#', '配电', 'R-103']
+    /* ▶ 冷热源系统（12台） */
+    ['CT-01', '磁悬浮冷水机组 CT-01', '冷热源', 'R-403', 'running'],
+    ['GSHP-01', '地源热泵 GSHP-01', '冷热源', 'R-403', 'running'],
+    ['CHWP-1', '冷冻水循环泵 1#', '冷热源', 'R-404', 'running'],
+    ['CHWP-2', '冷冻水循环泵 2#', '冷热源', 'R-404', 'running'],
+    ['CHWP-3', '冷冻水循环泵 3#', '冷热源', 'R-404', 'running'],
+    ['CHWP-4', '冷冻水循环泵 4#', '冷热源', 'R-404', 'running'],
+    ['CWP-1', '冷却水循环泵 1#', '冷热源', 'R-404', 'running'],
+    ['CWP-2', '冷却水循环泵 2#', '冷热源', 'R-404', 'running'],
+    ['CWP-3', '冷却水循环泵 3#', '冷热源', 'R-404', 'running'],
+    ['CT-1', '冷却塔 1#', '冷热源', 'R-404', 'stopped'],
+    ['CT-2', '冷却塔 2#', '冷热源', 'R-404', 'stopped'],
+    ['HE-01', '板式换热器', '冷热源', 'R-403', 'running'],
+    /* ▶ 空调通风系统（32台） */
+    ['AHU-1F', '组合式空调机组 1F', '空调通风', 'R-101', 'running'],
+    ['AHU-2F', '组合式空调机组 2F', '空调通风', 'R-201', 'running'],
+    ['AHU-3F', '组合式空调机组 3F', '空调通风', 'R-301', 'running'],
+    ['AHU-4F', '组合式空调机组 4F', '空调通风', 'R-401', 'running'],
+    ['AHU-5F', '组合式空调机组 5F', '空调通风', 'R-101', 'running'],
+    ['AHU-6F', '组合式空调机组 6F', '空调通风', 'R-201', 'running'],
+    ['AHU-7F', '组合式空调机组 7F', '空调通风', 'R-301', 'running'],
+    ['AHU-8F', '组合式空调机组 8F', '空调通风', 'R-401', 'running'],
+    ['AHU-9F', '组合式空调机组 9F', '空调通风', 'R-101', 'running'],
+    ['AHU-10F', '组合式空调机组 10F', '空调通风', 'R-201', 'running'],
+    ['AHU-11F', '组合式空调机组 11F', '空调通风', 'R-301', 'running'],
+    ['AHU-12F', '组合式空调机组 12F', '空调通风', 'R-401', 'running'],
+    ['AHU-13F', '组合式空调机组 13F', '空调通风', 'R-101', 'running'],
+    ['AHU-14F', '组合式空调机组 14F', '空调通风', 'R-201', 'running'],
+    ['AHU-15F', '组合式空调机组 15F', '空调通风', 'R-301', 'running'],
+    ['AHU-16F', '组合式空调机组 16F', '空调通风', 'R-401', 'running'],
+    ['AHU-17F', '组合式空调机组 17F', '空调通风', 'R-101', 'running'],
+    ['FA-1F', '新风机组 1F', '空调通风', 'R-101', 'running'],
+    ['FA-2F', '新风机组 2F', '空调通风', 'R-201', 'running'],
+    ['FA-3F', '新风机组 3F', '空调通风', 'R-301', 'running'],
+    ['FA-4F', '新风机组 4F', '空调通风', 'R-401', 'running'],
+    ['FA-5F', '新风机组 5F', '空调通风', 'R-101', 'running'],
+    ['FA-6F', '新风机组 6F', '空调通风', 'R-201', 'running'],
+    ['FA-7F', '新风机组 7F', '空调通风', 'R-301', 'running'],
+    ['FA-8F', '新风机组 8F', '空调通风', 'R-401', 'running'],
+    ['EF-1F', '排风机组 1F', '空调通风', 'R-101', 'running'],
+    ['EF-2F', '排风机组 2F', '空调通风', 'R-201', 'running'],
+    ['EF-3F', '排风机组 3F', '空调通风', 'R-301', 'running'],
+    ['EF-4F', '排风机组 4F', '空调通风', 'R-401', 'running'],
+    ['EF-5F', '排风机组 5F', '空调通风', 'R-101', 'running'],
+    ['CRAC-403', '精密空调 CRAC-403', '空调通风', 'R-403', 'fault'],
+    ['CRAC-201', '精密空调 CRAC-201', '空调通风', 'R-201', 'fault'],
+    /* ▶ 动力电梯系统（8台） */
+    ['EL-1', '客运电梯 1#', '电梯', 'R-204', 'running'],
+    ['EL-2', '客运电梯 2#', '电梯', 'R-304', 'running'],
+    ['EL-3', '客运电梯 3#', '电梯', 'R-204', 'running'],
+    ['EL-4', '客运电梯 4#', '电梯', 'R-304', 'running'],
+    ['FL-1', '货运电梯 1#', '电梯', 'R-204', 'running'],
+    ['FL-2', '货运电梯 2#', '电梯', 'R-304', 'running'],
+    ['SF-1', '加压送风机 1#', '电梯', 'R-404', 'running'],
+    ['SF-2', '加压送风机 2#', '电梯', 'R-404', 'running'],
+    /* ▶ 光伏储能系统（6台） */
+    ['INV-01', 'BIPV集中逆变器 INV-01', '光伏储能', 'R-404', 'running'],
+    ['PCS-01', '储能双向PCS PCS-01', '光伏储能', 'R-404', 'running'],
+    ['EV-1', '直流充电桩 1#', '光伏储能', 'R-204', 'running'],
+    ['EV-2', '直流充电桩 2#', '光伏储能', 'R-304', 'running'],
+    ['EV-3', '直流充电桩 3#', '光伏储能', 'R-204', 'running'],
+    ['EV-4', '直流充电桩 4#', '光伏储能', 'R-304', 'running'],
+    /* ▶ 给排水系统（2台） */
+    ['WP-1', '生活给水泵 1#', '给排水', 'R-404', 'running'],
+    ['WP-2', '生活给水泵 2#', '给排水', 'R-404', 'running']
   ];
   var devices = deviceDefs.map(function (d) {
     var room = rooms.filter(function (r) { return r.id === d[3]; })[0];
-    var status = 'running';
-    if (d[0] === 'AC-403') status = 'fault';                 // 设备故障
     return {
       id: d[0], name: d[1], type: d[2], roomId: d[3], roomName: room ? room.no + ' ' + room.name : '-',
-      status: status, power: rnd(2.4, 18.5),
-      mode: d[2] === '空调' ? '制冷' : (d[2] === '电梯' ? '群控' : '自动')
+      status: d[4], power: rnd(2.4, 18.5),
+      mode: d[2] === '空调通风' ? '制冷' : (d[2] === '电梯' ? '群控' : '自动')
     };
   });
 
-  /* ---------------- 数据采集与清洗记录 ---------------- */
+  /* ---------------- 全域感知架构记录 ---------------- */
   var cleaning = [];
   (function seedCleaning() {
     var srcs = [
@@ -276,6 +329,86 @@ JA.registerPage = function (p) { JA.pages.push(p); };
       status: '已闭环', result: '复拧并补浆，复测应力回落至205MPa', accept: '合格', reporter: 'AI结构诊断', created: '2026-09-08 10:15' }
   ];
 
+  /* ---------------- 能源能耗管理（智慧能源运维 · 17层办公楼口径） ---------------- */
+  // 能耗异常工单：电/水/气/冷热量 × 超预算/峰值异常/设备能耗突增/区域能耗异常
+  var energyOrders = [
+    { id: 'EO-20260928-01', energyType: '电', anomalyType: '设备能耗突增', target: '3F 智慧指挥中心（插座设备群）',
+      value: 128, base: 88, dev: 45.5, unit: 'kWh', status: '处理中', result: '', owner: '陈运维', created: '2026-09-28 09:12',
+      desc: '大屏与插座设备长时间满载，单位面积能耗显著超标' },
+    { id: 'EO-20260928-02', energyType: '电', anomalyType: '峰值异常', target: '2F 研发实验室 · 恒温恒湿机组',
+      value: 116, base: 82, dev: 41.5, unit: 'kWh', status: '待处理', result: '', owner: '陈运维', created: '2026-09-28 10:05',
+      desc: '1小时内环比上升63%，恒温恒湿机组连续高负荷运行' },
+    { id: 'EO-20260927-03', energyType: '电', anomalyType: '区域能耗异常', target: '4F 大会议室（无人空耗）',
+      value: 63, base: 28, dev: 125.0, unit: 'kWh', status: '已闭环', result: '已优化', owner: '赵敏', created: '2026-09-27 18:40',
+      desc: '人员密度为0，空调与照明仍在运行，存在无人空耗' },
+    { id: 'EO-20260926-04', energyType: '冷热量', anomalyType: '超预算', target: '全楼冷站 CT-01 · GSHP-01',
+      value: 4120, base: 3600, dev: 14.4, unit: 'kWh', status: '处理中', result: '', owner: '李海涛', created: '2026-09-26 08:30',
+      desc: '冷站日供冷量超月度预算分解值，末过热度偏高' },
+    { id: 'EO-20260925-05', energyType: '电', anomalyType: '设备能耗突增', target: '4F 数据机房 · 精密空调 CRAC-403',
+      value: 88, base: 61, dev: 44.3, unit: 'kWh', status: '处理中', result: '', owner: '李海涛', created: '2026-09-25 14:22',
+      desc: '压缩机异常导致制冷效率下降，回风温度28.4℃' },
+    { id: 'EO-20260924-06', energyType: '水', anomalyType: '超预算', target: '生活给水系统 WP-1 · WP-2',
+      value: 38, base: 30, dev: 26.7, unit: 'm³', status: '已闭环', result: '已核实', owner: '赵敏', created: '2026-09-24 07:55',
+      desc: '日夜间用水量基线抬升，排查为绿化灌溉临时用水' },
+    { id: 'EO-20260922-07', energyType: '气', anomalyType: '区域能耗异常', target: '1F 配套厨房燃气',
+      value: 52, base: 45, dev: 15.6, unit: 'm³', status: '已闭环', result: '已排除', owner: '赵敏', created: '2026-09-22 12:10',
+      desc: '非用餐时段燃气流量异常，核查为阀门未关严，已排除泄漏风险' },
+    { id: 'EO-20260920-08', energyType: '电', anomalyType: '超预算', target: '9F-12F 照明回路',
+      value: 486, base: 420, dev: 15.7, unit: 'kWh', status: '待处理', result: '', owner: '陈运维', created: '2026-09-20 21:05',
+      desc: '夜间照明回路未及时分区分断，超出周预算分解值' }
+  ];
+  // 能耗审计记录
+  var energyAudits = [
+    { id: 'AD-2026W39-3F', object: '3F 楼层', objType: '楼层', period: '周', base: 860, actual: 792,
+      saveRate: 7.9, reason: '指挥中心大屏与插座设备满载运行时间长', conclusion: '部分达标，持续跟踪', time: '2026-09-27' },
+    { id: 'AD-2026M09-CH', object: '空调冷热源设备组', objType: '设备组', period: '月', base: 12600, actual: 11240,
+      saveRate: 10.8, reason: '磁悬浮冷机投运，COP由4.2提升至6.5', conclusion: '达标', time: '2026-09-26' },
+    { id: 'AD-2026M09-4F', object: '4F 楼层', objType: '楼层', period: '月', base: 2380, actual: 2106,
+      saveRate: 11.5, reason: '无人空耗治理生效，人体感应联动投运', conclusion: '达标', time: '2026-09-25' },
+    { id: 'AD-2026W38-CRAC', object: '精密空调 CRAC-403', objType: '单体设备', period: '周', base: 620, actual: 706,
+      saveRate: -13.9, reason: '压缩机老化，制冷效率下降，耗电量抬升', conclusion: '未达标，已联动检修工单', time: '2026-09-20' },
+    { id: 'AD-2026M08-ALL', object: '全楼（1F-17F）', objType: '区域', period: '月', base: 52840, actual: 48620,
+      saveRate: 8.0, reason: '综合节能策略全面生效', conclusion: '达标', time: '2026-08-31' },
+    { id: 'AD-2026M08-LED', object: '照明系统', objType: '设备组', period: '月', base: 8420, actual: 5052,
+      saveRate: 40.0, reason: 'LED改造+光感人体感应联动', conclusion: '超额完成', time: '2026-08-31' }
+  ];
+  // 节能优化措施
+  var energyMeasures = [
+    { id: 'ME-01', name: '空调设定点优化', target: '组合式空调机组 1F-17F', startTime: '2026-09-15',
+      expectRate: 8, actualRate: 7.2, status: '实施中' },
+    { id: 'ME-02', name: '新风策略调整', target: '新风机组 1F-8F', startTime: '2026-09-10',
+      expectRate: 12, actualRate: 10.6, status: '实施中' },
+    { id: 'ME-03', name: '照明分区控制', target: '全楼照明回路', startTime: '2026-08-20',
+      expectRate: 40, actualRate: 40.0, status: '已完成' },
+    { id: 'ME-04', name: '设备待机关停', target: '4F 大会议室 · 公共区域', startTime: '2026-09-01',
+      expectRate: 15, actualRate: 13.8, status: '已完成' },
+    { id: 'ME-05', name: '光伏消纳优化', target: '储能PCS · 直流充电桩', startTime: '2026-09-25',
+      expectRate: 18, actualRate: null, status: '待实施' },
+    { id: 'ME-06', name: '空调设定点优化', target: '3F 智慧指挥中心', startTime: '2026-09-28',
+      expectRate: 6, actualRate: null, status: '待实施' }
+  ];
+  // 能耗考核基数（月度预算 / 核定人数）
+  var energyKpi = { monthBudget: 52000, monthActual: 48620, staff: 1800 };
+
+  /* ---------------- 节能成效对比（传统模式 vs 智能调控，口径与全站一致） ---------------- */
+  // 智能侧：年碳排放 1009.909 tCO₂ / 0.8843 → 年用电≈114.2万 kWh；综合节能率 23.6%
+  var savingCompare = {
+    rate: 23.6,
+    rows: [
+      { dim: '日均总能耗', base: '4,096', smart: '3,129', unit: 'kWh/d' },
+      { dim: '峰值能耗', base: '1,650', smart: '1,260', unit: 'kW' },
+      { dim: '单位面积能耗', base: '74.1', smart: '56.6', unit: 'kWh/㎡·a' },
+      { dim: '碳排放强度', base: '65.5', smart: '50.04', unit: 'kgCO₂/㎡·a' },
+      { dim: '年运行成本', base: '98.5', smart: '75.3', unit: '万元' }
+    ],
+    tips: [
+      'AI负荷预测：24h滚动预测冷热/电力负荷，指导冷机机组错峰投运',
+      '无人区域自动关停：人体感应+光感联动空调、照明，消除无人空耗',
+      '设备动态调节：磁悬浮冷机COP≥6.5、变频水泵按负荷自动调速',
+      '光伏自发自用：BIPV白天直供本地负荷，储能削峰填谷、余电上网'
+    ]
+  };
+
   /* ---------------- 用户与系统参数 ---------------- */
   var users = [
     { username: 'admin', name: '林致远', role: 'admin', roleName: '管理员', dept: '信息中心', phone: '186****0001', enabled: true },
@@ -369,6 +502,12 @@ JA.registerPage = function (p) { JA.pages.push(p); };
     var area = 20183 * pv.coverage;            // BIPV 覆盖面积
     pv.bipvArea = Math.round(area * 10) / 10;
     pv.year1Gen = Math.round(area * pv.genPerArea);   // 首年发电量 kWh
+    /* 光储运营数据（17层办公楼实测口径）：当日发电功率24h曲线（峰值186kW） */
+    pv.ops = {
+      capacityKw: 240, todayKwh: 1286, monthKwh: 38600, cumKwh: 864000,
+      selfUseRate: 92.0, gridKwh: 103,
+      power: [0, 0, 0, 0, 0, 0, 4, 22, 58, 102, 146, 172, 186, 178, 152, 108, 62, 24, 5, 0, 0, 0, 0, 0]
+    };
     pv.years = [];
     var cum = 0;
     for (var y = 1; y <= 25; y++) {
@@ -426,6 +565,8 @@ JA.registerPage = function (p) { JA.pages.push(p); };
       { time: ymdhm(new Date(Date.now() - 52 * 60000)), channel: '邮件', to: 'energy@juanzhiwei.cn', content: '【异常预警日报】数据机房精密空调超温故障，已自动生成检修工单。' }
     ],
     sleeves: sleeves, orders: orders, users: users, params: params,
+    energyOrders: energyOrders, energyAudits: energyAudits, energyMeasures: energyMeasures, energyKpi: energyKpi,
+    savingCompare: savingCompare,
     control: {
       acTemp: 26, lightDim: 80, elevatorMode: '群控节能', applied: false, savedKwh: 0, cutRate: 0, savedCarbon: 0,
       strategies: { envelope: true, chiller: true, gshp: false, led: true, bipv: false, heatRec: false, digital: true },
@@ -781,6 +922,38 @@ JA.registerPage = function (p) { JA.pages.push(p); };
       Store.emit({ type: 'order' });
     }
     return o;
+  };
+
+  /* ---------------- 业务动作 6b：能耗工单 / 节能措施 ---------------- */
+  Store.createEnergyOrder = function (o) {
+    var d = now();
+    var id = 'EO-' + ymd(d).replace(/-/g, '') + '-' + pad(state.energyOrders.length + 1).slice(-2);
+    var order = Object.assign({
+      id: id, unit: 'kWh', status: '待处理', result: '',
+      created: ymdhm(d), owner: JA.session ? JA.session.name : '运维人员'
+    }, o);
+    order.dev = order.base > 0 ? +(((order.value - order.base) / order.base) * 100).toFixed(1) : 0;
+    state.energyOrders.unshift(order);
+    Store.emit({ type: 'energyOrder' });
+    return order;
+  };
+  Store.updateEnergyOrder = function (id, patch) {
+    var o = state.energyOrders.filter(function (x) { return x.id === id; })[0];
+    if (o) {
+      Object.assign(o, patch);
+      if (patch.result) o.status = '已闭环';
+      Store.emit({ type: 'energyOrder' });
+    }
+    return o;
+  };
+  Store.updateEnergyMeasure = function (id, patch) {
+    var m = state.energyMeasures.filter(function (x) { return x.id === id; })[0];
+    if (m) {
+      Object.assign(m, patch);
+      if (patch.actualRate != null && patch.actualRate !== '') m.status = '已完成';
+      Store.emit({ type: 'energyOrder' });
+    }
+    return m;
   };
 
   /* ---------------- 业务动作 7：用户管理 ---------------- */

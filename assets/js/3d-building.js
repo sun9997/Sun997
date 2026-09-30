@@ -175,7 +175,7 @@
 
     // 楼层标签
     for (var f = 0; f < 4; f++) {
-      var lb = makeLabel(['1F 公共服务区', '2F 研发办公区', '3F 智慧指挥区', '4F 机房会议区'][f], '#7fd6ff', 3.6);
+      var lb = makeLabel(['公共服务区', '研发办公区', '智慧指挥区', '机房会议区'][f], '#7fd6ff', 3.6);
       lb.position.set(-FW / 2 - 2.6, f * FH + 2.2, -FD / 2);
       building.add(lb);
     }

@@ -1,5 +1,5 @@
 /* =====================================================================
- * 居安智卫 —— 长期运维视图页面集
+ * 居安智卫 —— 智慧能源运维页面集
  * ===================================================================== */
 (function () {
   'use strict';
@@ -52,6 +52,126 @@
   JA.h = { h: h, head: pageHead, panel: panel, ctx: pageCtx, lvlTag: lvlTag, equipTag: equipTag };
 
   var ENTRY_BTN = '<button class="btn btn-primary btn-sm" id="btnQuickEntry">+ 录入数据</button>';
+
+  /* ---------- 大屏共享模块（3D数字孪生页 与 指挥大屏 复用，数据保持一致） ---------- */
+  function twDevRow(name, sub, st, nav) {
+    var map = { ok: ['运行', 'g'], fault: ['故障', 'r'], wait: ['待机', 'y'] };
+    var mm = map[st] || map.ok;
+    return '<div class="ts-dr"' + (nav ? ' data-nav="' + nav + '"' : '') + '><span class="ts-dot ts-dot-' + mm[1] + '"></span>' +
+      '<div class="ts-dn"><b>' + name + '</b><small>' + sub + '</small></div><em class="ts-ds ts-ds-' + mm[1] + '">' + mm[0] + '</em></div>';
+  }
+  JA.iotBodyHtml = function () {
+    return '<div class="ts-snap">' +
+        '<div><b>60</b><span>设备总量</span></div>' +
+        '<div><b>58</b><span>运行设备</span></div>' +
+        '<div><b class="ts-c-g">96.7%</b><span>设备运行率</span></div>' +
+        '<div><b class="ts-c-r">2</b><span>设备异常</span></div>' +
+      '</div>' +
+      '<div class="ts-dev-list">' +
+        twDevRow('磁悬浮冷水机组 CT-01', 'COP 6.7 · 负荷72%', 'ok', 'ops:collect') +
+        twDevRow('地源热泵 GSHP-01', '冬COP4.0 / 夏EER5.2', 'ok', 'ops:collect') +
+        twDevRow('BIPV集中逆变器 INV-01', '发电 186kW', 'ok', 'ops:collect') +
+        twDevRow('储能双向PCS PCS-01', 'SOC 68% · 削峰中', 'ok', 'ops:control') +
+        twDevRow('精密空调 CRAC-403', '回风28.4℃ · 功率异常', 'fault', 'ops:alerts') +
+        twDevRow('精密空调 CRAC-201', '回风26.1℃ · 制冷量异常', 'fault', 'ops:alerts') +
+      '</div>';
+  };
+  JA.pvBodyHtml = function () {
+    var o = S().pv.ops;
+    return '<div class="ts-snap ts-snap6">' +
+        '<div><b>' + o.todayKwh.toLocaleString() + '</b><span>当日发电(kWh)</span></div>' +
+        '<div><b>' + (o.monthKwh / 10000).toFixed(2) + '万</b><span>当月发电(kWh)</span></div>' +
+        '<div><b>' + (o.cumKwh / 10000).toFixed(1) + '万</b><span>累计发电(kWh)</span></div>' +
+        '<div><b class="ts-c-g">' + o.selfUseRate + '%</b><span>自发自用率</span></div>' +
+        '<div><b>' + o.gridKwh + '</b><span>并网电量(kWh)</span></div>' +
+        '<div><b>' + o.capacityKw + '</b><span>装机容量(kW)</span></div>' +
+      '</div>' +
+      '<div class="pv-mini"><div class="pv-mini-hd"><span>当日发电功率趋势</span><em>峰值 186 kW</em></div>' +
+        '<div id="pvMiniChart"></div></div>' +
+      '<div class="ts-ib-list">' +
+        '<div class="ts-ib"><span>能源自给率</span><div class="ts-ib-b"><i style="width:22%"></i></div><b>22%</b></div>' +
+        '<div class="ts-ib"><span>等效减排</span><div class="ts-ib-b"><i class="hot" style="width:36%"></i></div><b>1.14 t</b></div>' +
+      '</div>' +
+      '<div class="ts-order" data-nav="ops:energy"><span>今日光伏发电减排</span><b class="ts-c-g">1.14<em>tCO₂</em></b><i>查看能耗 →</i></div>';
+  };
+  /* 节约成效模块：传统模式 vs 智能调控 紧凑对比（点击打开详情面板） */
+  JA.savingCmpHtml = function () {
+    var c = S().savingCompare;
+    var dims = [c.rows[0], c.rows[1], c.rows[3]];
+    return '<div class="sv-mini" data-act="saving" title="点击查看详细对比">' +
+      dims.map(function (r) {
+        return '<div class="svm-row"><span>' + r.dim + '</span>' +
+          '<b class="svm-base">' + r.base + '</b><i>→</i>' +
+          '<b class="svm-smart">' + r.smart + '</b>' +
+          '<em class="svm-down">↓' + c.rate + '%</em></div>';
+      }).join('') +
+      '<div class="svm-more">传统模式 vs 智能调控 · 点击查看详细对比 →</div></div>';
+  };
+  JA.saveBodyHtml = function () {
+    return '<div class="ts-snap">' +
+        '<div><b>3,268</b><span>累计减排(tCO₂)</span></div>' +
+        '<div><b>313.25</b><span>绿化碳汇(tCO₂)</span></div>' +
+        '<div><b class="ts-c-r">↓23.6%</b><span>综合节能率</span></div>' +
+      '</div>' +
+      JA.savingCmpHtml() +
+      '<div class="ts-ib-list">' +
+        '<div class="ts-ib"><span>折算节约电费</span><div class="ts-ib-b"><i style="width:64%"></i></div><b>≈277.1万</b></div>' +
+        '<div class="ts-ib"><span>相当于植树</span><div class="ts-ib-b"><i class="hot" style="width:82%"></i></div><b>≈18.2万棵</b></div>' +
+      '</div>' +
+      '<div class="ts-order" data-nav="ops:carbon"><span>碳排放下降幅度（环比昨日）</span><b class="ts-c-r">↓ 8.4<em>%</em></b><i>查看碳排 →</i></div>';
+  };
+  JA.vitaBodyHtml = function () {
+    var indBars = [['科技研发', 46], ['数据服务', 22], ['新能源', 18], ['综合配套', 14]]
+      .map(function (a) {
+        return '<div class="ts-ib"><span>' + a[0] + '</span><div class="ts-ib-b"><i style="width:' + a[1] + '%"></i></div><b>' + a[1] + '%</b></div>';
+      }).join('');
+    return '<div class="ts-snap">' +
+        '<div><b>7</b><span>入驻建筑(栋)</span></div>' +
+        '<div><b>1,286</b><span>在线人员</span></div>' +
+      '</div>' +
+      '<div class="ts-ib-list">' + indBars + '</div>' +
+      '<div class="ts-order" data-nav="ops:energy"><span>人均能耗匹配度</span><b class="ts-c-g">91.4<em>%</em></b><i>查看能耗 →</i></div>';
+  };
+
+  /* ================================================================
+   * 节能成效对比 · 共享详情面板（顶部指标卡 / 右侧模块共用）
+   * ================================================================ */
+  JA.openSavingPanel = function (opts) {
+    opts = opts || {};
+    var c = S().savingCompare;
+    var body =
+      '<div class="sv-panel">' +
+        '<div class="sv-hero">' +
+          '<div class="sv-hero-l"><div class="sv-hero-t">综合节能率</div>' +
+            '<div class="sv-hero-v">23.6<small>%</small><b class="sv-arrow">↓</b></div>' +
+            '<div class="sv-hero-s">传统模式基准对比智能调控实测（17层办公楼 · 20183㎡）</div></div>' +
+          '<div class="sv-hero-r">' +
+            '<div><b>3,268 <em>tCO₂</em></b><span>运行期累计减排</span></div>' +
+            '<div><b>277.1 <em>万元</em></b><span>折算节约电费</span></div>' +
+          '</div>' +
+        '</div>' +
+        '<h4 class="sv-tt">传统模式 <i>vs</i> 智能调控 · 多维度详细对比</h4>' +
+        '<table class="tbl sv-tbl"><thead><tr>' +
+          '<th>对比维度</th><th>传统模式基准值</th><th>智能调控实际值</th><th>同比下降比例</th>' +
+        '</tr></thead><tbody>' +
+          c.rows.map(function (r) {
+            return '<tr><td>' + r.dim + '</td>' +
+              '<td class="num sv-base">' + r.base + ' <small>' + r.unit + '</small></td>' +
+              '<td class="num sv-smart">' + r.smart + ' <small>' + r.unit + '</small></td>' +
+              '<td class="num"><span class="sv-down-tag"><b>↓</b> ' + c.rate + '%</span></td></tr>';
+          }).join('') +
+        '</tbody></table>' +
+        '<h4 class="sv-tt">节能策略说明</h4>' +
+        '<div class="sv-tips">' +
+          c.tips.map(function (t) { return '<div class="sv-tip"><i>✓</i><span>' + t + '</span></div>'; }).join('') +
+        '</div>' +
+        '<div class="sv-note">数据口径：电力按华北电网碳排放因子 0.8843 kgCO₂/kWh 折算，智能调控侧与指挥大屏碳排放、能耗指标实时同源。</div>' +
+      '</div>';
+    return JA.modal({
+      title: '节能成效对比', width: '860px', body: body, onClose: opts.onClose,
+      buttons: [{ text: '关闭' }]
+    });
+  };
 
   /* ================================================================
    * 3D 办公楼挂载器（大屏与孪生页共用，含房间信息浮卡）
@@ -161,6 +281,79 @@
   };
 
   /* ================================================================
+   * 园区级 3D 挂载器（指挥大屏复用运维总览 TwinCampus 模型）
+   *   100% 复用 JA.TwinCampus，点击建筑跳转运维总览页；含主楼A楼层选择器
+   * ================================================================ */
+  JA.mountCampus = function (wrap, opts) {
+    opts = opts || {};
+    var view = h('div', 'view3d');
+    var floorBtns = '<span class="vf-btn on" data-f="0">全部</span>';
+    for (var f = 1; f <= 17; f++) floorBtns += '<span class="vf-btn" data-f="' + f + '">' + f + 'F</span>';
+    view.innerHTML =
+      '<div class="v3d-toolbar">' +
+        '<span class="chip" id="cLocate">异常定位</span>' +
+        '<span class="chip" id="cReset">重置视角</span>' +
+        (JA.perm.energyEdit ? '<span class="chip on" id="cEntry">+ 数据录入</span>' : '<span class="chip" style="color:#ffd970">能耗只读</span>') +
+      '</div>' +
+      '<div class="v3d-floors" id="cFloors"><em>主楼A</em>' + floorBtns + '</div>' +
+      '<div class="v3d-floorinfo" id="cFInfo"></div>' +
+      '<div class="v3d-hint">斜45°鸟瞰 · 自动环绕 · 拖拽旋转 · 滚轮缩放 · 点击建筑进入3D数字孪生</div>' +
+      '<div class="legend"><div><i style="background:#2f9bff"></i>蓝光玻璃全息建筑</div>' +
+        '<div><i style="background:#1f9d6a"></i>绿化景观</div>' +
+        '<div><i style="background:#ff2d55;border-radius:50%"></i>异常告警点位</div></div>';
+    wrap.appendChild(view);
+
+    var scene = new JA.TwinCampus(view, {
+      onPickBuilding: function (b) {
+        scene.selectBuilding(b.id);
+        setTimeout(function () { JA.go('ops', 'twin'); }, 350);
+      },
+      // 仅点击建筑跳转；空白处不跳转（避免与楼层选择交互冲突）
+      onPickEmpty: function () {}
+    });
+
+    /* 楼层选择器：高亮主楼A对应楼层 + 同步该层能源数据（与运维总览 buildingBody 同一计算公式） */
+    var fInfo = view.querySelector('#cFInfo');
+    view.querySelector('#cFloors').addEventListener('click', function (e) {
+      var btn = e.target && e.target.closest ? e.target.closest('.vf-btn') : null;
+      if (!btn) return;
+      var fl = +btn.getAttribute('data-f');
+      var btns = view.querySelectorAll('#cFloors .vf-btn');
+      for (var i = 0; i < btns.length; i++) btns[i].classList.toggle('on', btns[i] === btn);
+      scene.setFloor(fl);
+      if (fl > 0) {
+        var seed = 65 * 7 + fl * 13;   // 'A'.charCodeAt(0)=65，与 buildingBody 同公式
+        var rnd = function (k) { var x = Math.sin(seed * 12.9898 + k * 78.233) * 43758.5453; return x - Math.floor(x); };
+        var dayK = Math.round(1180 * 0.29 * (0.9 + rnd(1) * 0.2));
+        var pvD = Math.round(dayK * (0.2 + rnd(2) * 0.08));
+        var cd = (dayK * 0.8843 / 1000).toFixed(2);   // 华北电网碳排放因子
+        var devRun = 12 - Math.floor(rnd(3) * 2);
+        fInfo.style.display = 'flex';
+        fInfo.innerHTML = '<b>A栋 · ' + fl + 'F</b>' +
+          '<span>日能耗 ' + dayK.toLocaleString() + ' kWh</span>' +
+          '<span>光伏 ' + pvD + ' kWh</span>' +
+          '<span>碳排放 ' + cd + ' tCO₂</span>' +
+          '<span>设备 ' + devRun + '/12 运行</span>';
+      } else {
+        fInfo.style.display = 'none';
+        fInfo.innerHTML = '';
+      }
+    });
+
+    view.querySelector('#cEntry') && (view.querySelector('#cEntry').onclick = function () { JA.openRoomEntry(); });
+    view.querySelector('#cLocate').onclick = function () {
+      var t = scene.locateAlert();
+      if (t) JA.toast('已定位至异常建筑：' + t.name, 'warn');
+    };
+    view.querySelector('#cReset').onclick = function () { scene.resetView(); };
+
+    return {
+      scene: scene,
+      dispose: function () { scene.dispose(); view.remove(); }
+    };
+  };
+
+  /* ================================================================
    * 页面 1：指挥中心大屏首页
    * ================================================================ */
   JA.registerPage({
@@ -177,58 +370,87 @@
           '</div>' +
         '</div>';
 
-      /* KPI 卡片（真实指标：天津绿色办公建筑 20183㎡ / 全生命周期LCA） */
+      /* KPI 卡片（真实指标：天津绿色办公建筑 20183㎡ / 全生命周期LCA）
+       * 四大分类体系：能耗类 / 碳排放类 / 异常类 / 综合类（顶部与右侧面板分区一一对应） */
+      var CATS = [
+        { id: 'energy', name: '能耗类' },
+        { id: 'carbon', name: '碳排放类' },
+        { id: 'alert',  name: '异常类' },
+        { id: 'compre', name: '综合类' }
+      ];
       var kpiDefs = [
-        { label: '建筑总面积', icon: 'site', nav: 'carbon',
-          val: function (k) { return k.area.toLocaleString(); }, unit: '㎡',
-          sub: function () { return '天津典型绿色办公建筑 · 地上' + JA.Store.state.lca.floors + '层'; } },
-        { label: '监测房间总数', icon: 'twin', nav: 'twin',
-          val: function (k) { return k.monitoredRooms; }, unit: '间', sub: function () { return '三维能耗态势地图'; } },
-        { label: '设备总数', icon: 'device', nav: 'equipment',
-          val: function (k) { return k.devices; }, unit: '台',
-          sub: function (k) { return '故障 <b class="c-red">' + k.deviceFault + '</b> 台'; } },
-        { label: '套筒节点总数', icon: 'sleeve', nav: null,
-          val: function (k) { return k.sleeves; }, unit: '个',
-          sub: function (k) { return '超限告警 <b class="c-red">' + k.sleeveAlarm + '</b> 个'; } },
-        { label: '整体健康指数', icon: 'report', cls: 'green',
-          val: function (k) { return k.health; }, unit: '分', sub: function () { return '结构+能源综合评分'; } },
-        { label: '当前总能耗', icon: 'energy', cls: 'purple', nav: 'energy',
+        /* 能耗类：能源消耗 / 能源产出 / 设备运行 */
+        { cat: 'energy', label: '当前总能耗', icon: 'energy', cls: 'purple', nav: 'energy',
           val: function (k) { return k.totalKwh; }, unit: 'kWh',
           sub: function (k) { return 'AI预测下时段 ' + k.forecast + ' kW'; } },
-        { label: '建筑运行年碳排放', cls: 'purple', nav: 'carbon',
-          val: function (k) { return k.yearCarbon.toLocaleString(); }, unit: 'tCO₂',
-          sub: function () { return '运行阶段年碳排放量（实测）'; } },
-        { label: '全生命周期总碳排放', cls: 'purple', nav: 'carbon',
-          val: function (k) { return k.lcaCarbon.toLocaleString(); }, unit: 'tCO₂',
-          sub: function () { return '已扣减绿化碳汇 313.250 tCO₂'; } },
-        { label: 'AI负荷预测结果', icon: 'ai', nav: 'ai',
+        { cat: 'energy', label: '设备总数', icon: 'device', nav: 'equipment',
+          val: function (k) { return k.devices; }, unit: '台',
+          sub: function (k) { return '故障 <b class="c-red">' + k.deviceFault + '</b> 台'; } },
+        { cat: 'energy', label: 'AI负荷预测结果', icon: 'ai', nav: 'ai',
           val: function (k) { return k.forecast; }, unit: 'kW',
           sub: function () { return '下一预测时段 · 24h滚动'; } },
-        { label: '异常告警数量', icon: 'alert', cls: 'red', nav: 'alerts',
+        { cat: 'energy', label: '光伏发电量', icon: 'energy', cls: 'green', nav: 'energy',
+          val: function () { return '1,286'; }, unit: 'kWh',
+          sub: function () { return '180块BIPV组件 · 实时功率186kW'; } },
+        /* 碳排放类：碳排放 / 节能降碳成效 / 减排对比 */
+        { cat: 'carbon', label: '建筑运行年碳排放', cls: 'purple', nav: 'carbon',
+          val: function (k) { return k.yearCarbon.toLocaleString(); }, unit: 'tCO₂',
+          sub: function () { return '运行阶段年碳排放量（实测）'; } },
+        { cat: 'carbon', label: '全生命周期总碳排放', cls: 'purple', nav: 'carbon',
+          val: function (k) { return k.lcaCarbon.toLocaleString(); }, unit: 'tCO₂',
+          sub: function () { return '已扣减绿化碳汇 313.250 tCO₂'; } },
+        { cat: 'carbon', label: '总减排量', cls: 'green', nav: 'carbon',
+          val: function () { return '5.16'; }, unit: 'tCO₂',
+          sub: function () { return '运行期累计减排 3,268 tCO₂'; } },
+        { cat: 'carbon', label: '综合节能率', cls: 'green', entry: 'saving',
+          val: function () { return '23.6'; }, unit: '%', arrow: true,
+          sub: function () { return '点击查看详细对比'; } },
+        /* 异常类：设备异常 / 结构异常 / 告警推送 */
+        { cat: 'alert', label: '异常告警数量', icon: 'alert', cls: 'red', nav: 'alerts',
           val: function (k) { return k.alerts; }, unit: '起',
           sub: function (k) { return '红色告警 ' + k.redAlerts + ' 起'; } },
-        { label: '待处理工单', icon: 'report', nav: null,
+        { cat: 'alert', label: '待处理工单', icon: 'report', nav: null,
           val: function (k) { return k.orders; }, unit: '单',
-          sub: function () { return '整改工单 / 验收闭环'; } },
-        { label: '能耗预测准确率', icon: 'ai', cls: 'green',
+          sub: function () { return '整改工单 / 整改工单'; } },
+        /* 综合类：综合评估 / AI能力 / 运营态势 */
+        { cat: 'compre', label: '建筑总面积', icon: 'site', nav: 'carbon',
+          val: function (k) { return k.area.toLocaleString(); }, unit: '㎡',
+          sub: function () { return '天津典型绿色办公建筑 · 地上' + JA.Store.state.lca.floors + '层'; } },
+        { cat: 'compre', label: '监测房间总数', icon: 'twin', nav: 'twin',
+          val: function () { return '240'; }, unit: '间', sub: function () { return '17层办公建筑全覆盖'; } },
+        { cat: 'compre', label: '整体健康指数', icon: 'report', cls: 'green',
+          val: function (k) { return k.health; }, unit: '分', sub: function () { return '结构+能源综合评分'; } },
+        { cat: 'compre', label: '能耗预测准确率', icon: 'ai', cls: 'green',
           val: function (k) { return '≥92'; }, unit: '%',
           sub: function (k) { return '当前模型 ' + k.accuracy + '%'; } },
-        { label: '系统节能优化有效率', cls: 'green', nav: 'control',
+        { cat: 'compre', label: '系统综合节能效率', cls: 'green', nav: 'control',
           val: function () { return '10%-40'; }, unit: '%',
           sub: function () { return '建筑侧+光储侧综合调控区间'; } }
       ];
+      function kpiCard(d, k) {
+        var cls = d.cls || '';
+        if (d.label === '异常告警数量' && k.alerts > 0) cls = 'red';
+        var attr = d.entry ? 'data-act="' + d.entry + '" title="点击查看详细对比"'
+                           : 'data-nav="' + (d.nav || '') + '"';
+        return '<div class="kpi ' + cls + (d.entry ? ' kpi-entry' : '') + '" ' + attr + '>' +
+          '<div class="k-label">' + d.label + '</div>' +
+          '<div class="k-val">' + d.val(k) + ' <small>' + d.unit + '</small>' +
+            (d.arrow ? ' <b class="k-arrow">↓</b>' : '') + '</div>' +
+          '<div class="k-sub">' + d.sub(k) + '</div></div>';
+      }
       function renderKpis() {
         var k = JA.Store.kpis();
-        document.getElementById('dcKpis').innerHTML = kpiDefs.map(function (d) {
-          var cls = d.cls || '';
-          if (d.label === '异常告警数量' && k.alerts > 0) cls = 'red';
-          return '<div class="kpi ' + cls + '" data-nav="' + (d.nav || '') + '">' +
-            '<div class="k-label">' + d.label + '</div>' +
-            '<div class="k-val">' + d.val(k) + ' <small>' + d.unit + '</small></div>' +
-            '<div class="k-sub">' + d.sub(k) + '</div></div>';
+        document.getElementById('dcKpis').innerHTML = CATS.map(function (c) {
+          var cards = kpiDefs.filter(function (d) { return d.cat === c.id; });
+          return '<div class="cat-block cat-' + c.id + '">' +
+            '<div class="cat-hd"><i></i><span>' + c.name + '</span><em>' + cards.length + ' 项指标</em></div>' +
+            '<div class="cat-bd">' + cards.map(function (d) { return kpiCard(d, k); }).join('') + '</div></div>';
         }).join('');
         document.getElementById('dcKpis').querySelectorAll('.kpi[data-nav]').forEach(function (c) {
           c.onclick = function () { var p = c.getAttribute('data-nav'); if (p) JA.go('ops', p); };
+        });
+        document.getElementById('dcKpis').querySelectorAll('.kpi[data-act="saving"]').forEach(function (c) {
+          c.onclick = function () { JA.openSavingPanel(); };
         });
       }
 
@@ -241,20 +463,67 @@
       var pRank = panel('房间能耗强度 TOP', 'kWh');
       var dRank = h('div', 'chart'); pRank.bd.appendChild(dRank); left.appendChild(pRank.el);
 
-      /* 中列 3D */
+      /* 中列 3D（复用运维总览 TwinCampus 园区模型） */
       var center = document.getElementById('dcCenter');
-      var mounted = JA.mountBuilding(center, { autoLocate: true });
+      var mounted = JA.mountCampus(center, { autoLocate: true });
 
-      /* 右列 */
+      /* 右列 —— 四大分类纵向分区（能耗 / 碳排放 / 异常 / 综合，与顶部 KPI 分区一一对应） */
       var right = document.getElementById('dcRight');
-      var pFc = panel('AI 负荷预测', '未来24h');
-      var dFc = h('div', 'chart'); pFc.bd.appendChild(dFc); right.appendChild(pFc.el);
-      var pAl = panel('实时异常预警', '<span id="alMore" style="cursor:pointer;color:#7fb6ff">全部 →</span>');
-      var alWrap = h('div', 'scroll-y', ''); alWrap.style.height = '100%'; pAl.bd.appendChild(alWrap);
-      pAl.bd.style.padding = '6px 10px'; right.appendChild(pAl.el);
-      var pPush = panel('预警推送记录', '短信 / 邮件');
-      var pushWrap = h('div', 'scroll-y', ''); pushWrap.style.height = '100%'; pPush.bd.appendChild(pushWrap);
-      pPush.bd.style.padding = '8px 12px'; right.appendChild(pPush.el);
+      right.classList.add('dc-right');
+      function catBlock(cls, name, extra) {
+        var el = h('div', 'cat-block cat-' + cls);
+        el.innerHTML = '<div class="cat-hd"><i></i><span>' + name + '</span>' +
+          (extra ? '<em>' + extra + '</em>' : '') + '</div>';
+        var bd = h('div', 'cat-bd');
+        el.appendChild(bd);
+        right.appendChild(el);
+        return bd;
+      }
+      function catMod(title, extra, bodyHtml) {
+        var el = h('div', 'cat-mod');
+        el.innerHTML = '<div class="cat-mod-hd"><span>' + title + '</span>' +
+          (extra ? '<em>' + extra + '</em>' : '') + '</div>' +
+          '<div class="cat-mod-bd">' + (bodyHtml || '') + '</div>';
+        return { el: el, bd: el.querySelector('.cat-mod-bd') };
+      }
+
+      /* 能耗类区块：设备物联 + 光伏发电（独立分组） */
+      var bdEnergy = catBlock('energy', '能耗类', '能源消耗 · 产出 · 设备');
+      bdEnergy.appendChild(catMod('设备物联', '物联网关在线', JA.iotBodyHtml()).el);
+      bdEnergy.appendChild(catMod('光伏发电', '240kW装机 · 180块BIPV', JA.pvBodyHtml()).el);
+
+      /* 碳排放类区块：节约成效（传统 vs 智能调控对比） */
+      var bdCarbon = catBlock('carbon', '碳排放类', '减排成效对比');
+      bdCarbon.appendChild(catMod('节约成效', '传统 vs 智能调控', JA.saveBodyHtml()).el);
+
+      /* 异常类区块：实时异常预警 + 预警推送记录 */
+      var bdAlert = catBlock('alert', '异常类', '告警 · 推送');
+      var mAl = catMod('实时异常预警', '<span id="alMore" style="cursor:pointer;color:#7fb6ff">全部 →</span>');
+      var alWrap = h('div', 'scroll-y dc-al-list'); mAl.bd.appendChild(alWrap);
+      bdAlert.appendChild(mAl.el);
+      var mPush = catMod('预警推送记录', '短信 / 邮件');
+      var pushWrap = h('div', 'scroll-y dc-push-list'); mPush.bd.appendChild(pushWrap);
+      bdAlert.appendChild(mPush.el);
+
+      /* 综合类区块：AI负荷预测 + 园区活力 */
+      var bdCompre = catBlock('compre', '综合类', 'AI能力 · 运营态势');
+      var mFc = catMod('AI 负荷预测', '未来24h');
+      var dFc = h('div', 'chart dc-fc-chart'); mFc.bd.appendChild(dFc);
+      bdCompre.appendChild(mFc.el);
+      bdCompre.appendChild(catMod('园区活力', '业态分布', JA.vitaBodyHtml()).el);
+
+      /* 分区与模块内的路由跳转（事件委托，与孪生页同规则） */
+      right.addEventListener('click', function (e) {
+        var saving = e.target.closest ? e.target.closest('[data-act="saving"]') : null;
+        if (saving) { JA.openSavingPanel(); return; }
+        var more = e.target && e.target.id === 'alMore';
+        if (more) { JA.go('ops', 'alerts'); return; }
+        var nav = e.target.closest ? e.target.closest('[data-nav]') : null;
+        if (nav) {
+          var parts = nav.getAttribute('data-nav').split(':');
+          JA.go(parts[0], parts[1]);
+        }
+      });
 
       /* 图表渲染 */
       function trendChart() {
@@ -305,6 +574,30 @@
           p.histLabels.slice(-12), p.history.slice(-12),
           p.futureLabels.slice(0, 12), p.future.slice(0, 12), p.band.slice(0, 12));
       }
+      /* 光伏发电：当日发电功率趋势迷你图（sparkline，峰值186kW） */
+      function pvMiniChart() {
+        var box = document.getElementById('pvMiniChart');
+        if (!box) return;
+        var o = S().pv.ops;
+        var labels = [], i;
+        for (i = 0; i < 24; i++) labels.push(i + ':00');
+        var chart = echarts.init(box);
+        chart.setOption({
+          grid: { left: 6, right: 8, top: 8, bottom: 18 },
+          tooltip: { trigger: 'axis', formatter: function (p) { return p[0].name + '<br/>发电功率 ' + p[0].value + ' kW'; } },
+          xAxis: { type: 'category', boundaryGap: false, data: labels,
+            axisLine: { lineStyle: { color: 'rgba(90,140,210,.35)' } }, axisTick: { show: false },
+            axisLabel: { color: '#6f8bb8', fontSize: 8.5, interval: 5 } },
+          yAxis: { type: 'value', show: false, max: 210 },
+          series: [{
+            type: 'line', smooth: true, symbol: 'none', data: o.power,
+            lineStyle: { width: 2, color: '#ffc83d' },
+            areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1,
+              [{ offset: 0, color: 'rgba(255,200,61,.4)' }, { offset: 1, color: 'rgba(255,200,61,0)' }]) }
+          }]
+        });
+        ctx.bag.add(chart);
+      }
       function alertList() {
         var list = S().alerts.filter(function (a) { return a.active; }).slice(0, 6);
         alWrap.innerHTML = list.length ? list.map(function (a) {
@@ -326,7 +619,7 @@
       }
       document.getElementById('alMore').onclick = function () { JA.go('ops', 'alerts'); };
 
-      renderKpis(); trendChart(); pieChart(); rankChart(); forecastMini(); alertList(); pushList();
+      renderKpis(); trendChart(); pieChart(); rankChart(); forecastMini(); pvMiniChart(); alertList(); pushList();
       ctx.sub(function (evt) {
         if (evt.type === 'push' || evt.type === 'alert') { alertList(); pushList(); }
         renderKpis();
@@ -334,91 +627,278 @@
         trendChart(); pieChart(); rankChart(); forecastMini();
       });
 
-      return ctx.done();
+      var baseDispose = ctx.done();
+      return function () {
+        try { mounted.dispose(); } catch (e) {}
+        baseDispose();
+      };
     }
   });
 
+
+
   /* ================================================================
-   * 页面 2：3D 数字孪生可视化（全屏交互页）
+   * 页面 2：城枢慧眼 · 双视图 3D 数字孪生指挥大屏（全屏覆盖层）
    * ================================================================ */
   JA.registerPage({
     id: 'twin', view: 'ops', group: '综合总览', name: '3D数字孪生', icon: 'twin',
     render: function (el) {
-      var ctx = pageCtx();
-      el.innerHTML = pageHead('3D 数字孪生 · 能耗动态态势地图', '长期运维视图 / 3D数字孪生',
-        ENTRY_BTN + '<button class="btn btn-sm" id="btnGoAi">AI预测</button>');
-      var layout = h('div', 'grid twin-layout', '');
-      layout.style.cssText = 'grid-template-columns:minmax(0,1fr) 360px;height:calc(100vh - 130px)';
-      var left = h('div');
-      var right = h('div', 'flex', ''); right.style.flexDirection = 'column'; right.style.gap = '10px';
-      layout.appendChild(left); layout.appendChild(right);
-      el.appendChild(layout);
+      var pendOrders = S().orders.filter(function (o) { return o.status !== '已闭环'; }).length;
 
-      var mounted = JA.mountBuilding(left);
-
-      /* 右侧：楼层对比 + 选中房间分项 + 态势说明 */
-      var pFloor = panel('楼层能耗对比', 'kWh');
-      var dFloor = h('div', 'chart'); dFloor.style.height = '210px'; pFloor.bd.appendChild(dFloor);
-      right.appendChild(pFloor.el);
-      var pSel = panel('房间用能结构', '点击3D房间切换');
-      var dSel = h('div', 'chart'); dSel.style.height = '200px'; pSel.bd.appendChild(dSel);
-      var selTip = h('div', 'muted fs11 pad12', '请在左侧模型中点击任意房间…'); pSel.bd.appendChild(selTip);
-      right.appendChild(pSel.el);
-      var pHelp = panel('三维能耗态势地图图例');
-      pHelp.bd.innerHTML =
-        '<div class="fs11" style="line-height:2;color:#9fc3ec">' +
-        '<div><i style="display:inline-block;width:12px;height:12px;background:#ff5a2b;border-radius:2px;margin-right:8px"></i>橙红：高能耗区域（插座设备集中办公区 ≥ ' + S().params.energyRed + 'kWh）</div>' +
-        '<div><i style="display:inline-block;width:12px;height:12px;background:#ffc83d;border-radius:2px;margin-right:8px"></i>黄色：中能耗区域（照明、空调机房 ' + S().params.energyOrange + '–' + S().params.energyRed + 'kWh）</div>' +
-        '<div><i style="display:inline-block;width:12px;height:12px;background:#2f8bff;border-radius:2px;margin-right:8px"></i>蓝绿：低能耗区域（走廊、设备间）</div>' +
-        '<div><span class="blink-dot"></span>呼吸闪烁：异常能耗房间自动告警，点击查看分项与碳排放</div>' +
-        '<div class="muted" style="margin-top:4px">碳排放按华北电网因子 0.8843 kgCO₂/kWh 实时核算</div></div>';
-      right.appendChild(pHelp.el);
-
-      function floorChart() {
-        var sums = [0, 0, 0, 0];
-        S().rooms.forEach(function (r) { sums[+r.floor.slice(1) - 1] += r.total; });
-        Charts.bar(dFloor, ctx.bag, {
-          x: ['1F', '2F', '3F', '4F'], data: sums, label: true, barWidth: 26
-        });
+      /* ---------- 小组件构建 ---------- */
+      function grp(gid, icon, title, bodyHtml) {
+        return '<div class="ts-grp" id="' + gid + '">' +
+          '<div class="ts-grp-hd"><span class="ts-ico">' + icon + '</span><span class="ts-gt">' + title + '</span><i></i></div>' +
+          '<div class="ts-grp-bd">' + bodyHtml + '</div></div>';
       }
-      var selChart = null;
-      function selPie(room) {
-        selTip.style.display = 'none';
-        if (selChart) selChart.dispose(), ctx.bag.list = ctx.bag.list.filter(function (c) { return c !== selChart; });
-        selChart = Charts.pie(dSel, ctx.bag, {
-          colors: ['#ff4d6a', '#2f7bff', '#ffc83d', '#ff7a45', '#22e0ff'],
-          centerText: { v: room.total, t: 'kWh / ' + JA.Store.roomCarbon(room.total) + ' kgCO₂' },
-          data: [{ name: '供暖', value: room.heating || 0 }, { name: '空调风机', value: room.hvac },
-            { name: '照明', value: room.light }, { name: '插座设备', value: room.socket || 0 },
-            { name: '电梯', value: room.elevator }]
-        });
-      }
-      floorChart();
-      var origPick = mounted.showRoom;
-      // hook：model onPick already calls showRoom; extend via store capture current popup room
-      var lastSel = null;
-      var subOff = JA.Store.subscribe(function () {});
-      // 使用轮询代价小：监听 3D scene selected 变化
-      var iv = setInterval(function () {
-        var id = mounted.scene.selectedId;
-        if (id && id !== lastSel) { lastSel = id; selPie(JA.Store.getRoom(id)); }
-        if (id) {
-          // 数据变化后刷新房间饼图
-          var r = JA.Store.getRoom(id);
-          if (r && r.updatedAt !== selPie._t) { selPie._t = r.updatedAt; selPie(r); }
+      function mc(label, d, m, c, unit, nav, cls) {
+        function row(tag, v) {
+          return '<div class="ts-mr"><span>' + tag + '</span><b>' + v + '<em>' + unit + '</em></b></div>';
         }
-      }, 400);
+        return '<div class="ts-mc ' + (cls || '') + '"' + (nav ? ' data-nav="' + nav + '"' : '') + '>' +
+          '<div class="ts-mc-l">' + label + '</div>' + row('当日', d) + row('当月', m) + row('累计', c) + '</div>';
+      }
+      function infoRow(label, id, val, cls) {
+        return '<div class="ts-ir ' + (cls || '') + '"><span>' + label + '</span><b' + (id ? ' id="' + id + '"' : '') + '>' + val + '</b></div>';
+      }
+      function devRow(name, sub, st, nav) {
+        var map = { ok: ['运行', 'g'], fault: ['故障', 'r'], wait: ['待机', 'y'] };
+        var mm = map[st] || map.ok;
+        return '<div class="ts-dr"' + (nav ? ' data-nav="' + nav + '"' : '') + '><span class="ts-dot ts-dot-' + mm[1] + '"></span>' +
+          '<div class="ts-dn"><b>' + name + '</b><small>' + sub + '</small></div><em class="ts-ds ts-ds-' + mm[1] + '">' + mm[0] + '</em></div>';
+      }
 
-      document.getElementById('btnQuickEntry').onclick = function () { JA.openRoomEntry(); };
-      document.getElementById('btnGoAi').onclick = function () { JA.go('ops', 'ai'); };
+      /* ---------- 面板内容构建（函数化，支持双视图切换重建） ---------- */
+      // 智能能源 · 全局（运维总览）
+      var energyBody =
+        '<div class="ts-mg">' +
+          mc('能耗总量', '5,842', '168.4万', '1,862万', 'kWh', 'ops:energy') +
+          mc('光伏发电量', '1,286', '3.86万', '86.4万', 'kWh', 'ops:energy') +
+          mc('供冷供热量', '3,120', '92.6万', '1,042万', 'kWh', 'ops:energy') +
+          mc('总减排量', '5.16', '149.2', '3,268', 'tCO₂', 'ops:carbon') +
+          mc('光伏减排量', '1.14', '34.1', '76.4', 'tCO₂', 'ops:carbon') +
+          mc('能源站减排量', '1.47', '43.8', '129.1', 'tCO₂', 'ops:carbon') +
+        '</div>' +
+        '<div class="ts-spark-hd">当日能耗趋势（kWh）</div><canvas id="tsSpark" class="ts-spark"></canvas>';
 
-      ctx.sub(function () { floorChart(); });
-      return function () { clearInterval(iv); subOff(); mounted.dispose(); ctx.done()(); };
+      // 智能能源 · 单栋/单楼层明细（点击建筑联动）
+      function buildingBody(b, fl) {
+        var seed = b.id.charCodeAt(0) * 7 + (fl || 0) * 13;
+        var rnd = function (i) { var x = Math.sin(seed * 12.9898 + i * 78.233) * 43758.5453; return x - Math.floor(x); };
+        var area = b.floors * 1180; // 单栋建筑面积估算（㎡）
+        var scale = fl ? 1 / b.floors : 1;
+        var dayK = Math.round(area * 0.29 * scale * (0.9 + rnd(1) * 0.2));
+        var monK = (dayK * 28.8 / 10000).toFixed(1) + '万';
+        var accK = (dayK * 318 / 10000).toFixed(0) + '万';
+        var hasPv = (b.id === 'A' || b.id === 'G');
+        var pvD = hasPv ? Math.round(dayK * (0.2 + rnd(2) * 0.08)) : 0;
+        var pvM = hasPv ? (pvD * 28.8 / 10000).toFixed(2) + '万' : '0';
+        var pvA = hasPv ? (pvD * 318 / 10000).toFixed(1) + '万' : '0';
+        var cd = (dayK * 0.8843 / 1000).toFixed(2), cm = (dayK * 28.8 * 0.8843 / 1000).toFixed(1), ca = (dayK * 318 * 0.8843 / 1000).toFixed(0);
+        var devTotal = b.floors * 12, devRun = devTotal - Math.floor(rnd(3) * 2);
+        var scope = fl ? (b.name.replace(' · ' + b.floors + 'F', '') + ' · ' + fl + 'F') : b.name;
+        return '<div class="ts-bld-hd"><span>' + scope + '</span><em id="tsBldBack">返回全局总览 →</em></div>' +
+          '<div class="ts-mg">' +
+            mc('能耗总量', dayK.toLocaleString(), monK, accK, 'kWh', 'ops:energy') +
+            mc('光伏发电量', pvD.toLocaleString(), pvM, pvA, 'kWh', 'ops:energy') +
+            mc('碳排放量', cd, cm, ca, 'tCO₂', 'ops:carbon') +
+            mc('供冷供热量', Math.round(dayK * .53).toLocaleString(), (dayK * .53 * 28.8 / 10000).toFixed(1) + '万', (dayK * .53 * 318 / 10000).toFixed(0) + '万', 'kWh', 'ops:energy') +
+          '</div>' +
+          '<div class="ts-ir-grid">' +
+            infoRow('设备运行状态', null, devRun + ' / ' + devTotal + ' 运行') +
+            infoRow('能源自给率', null, hasPv ? (pvD / dayK * 100).toFixed(1) + '%' : '0%（市电）') +
+            infoRow('单位面积能耗', null, (dayK / (area * scale)).toFixed(2) + ' kWh/㎡') +
+            infoRow('实时功率因数', null, (0.92 + rnd(4) * 0.06).toFixed(3)) +
+          '</div>';
+      }
+
+      // 环境感知（运维总览共用）
+      var envBody =
+        '<div class="ts-ir-grid">' +
+          infoRow('实时温度', 'tsTemp', '26.4℃') +
+          infoRow('相对湿度', 'tsHum', '58%') +
+          infoRow('PM2.5', 'tsPm', '32 μg/m³') +
+          infoRow('风速风向', null, '东南风 2.8m/s') +
+        '</div>' +
+        '<div class="ts-hi ts-hi-s"><div class="ts-hi-l">室外环境综合评分</div><div class="ts-hi-v ts-c-g">92.6<small>分</small></div></div>' +
+        '<div class="ts-ir-grid">' +
+          infoRow('当日人流量', 'tsFlowP', '3,856 人次') +
+          infoRow('当日车流量', 'tsFlowC', '1,204 车次') +
+        '</div>';
+
+      /* ---------- 运维总览 · 右栏（能源运营维度） ---------- */
+      var iotBody = JA.iotBodyHtml();
+
+      var aiBody =
+        '<div class="ts-ai-grid">' +
+          '<div data-nav="ops:control"><span>今日节能率</span><b>23.6<em>%</em></b><small>区间 10%–40%</small></div>' +
+          '<div data-nav="ops:carbon"><span>碳排放下降幅度</span><b class="ts-c-r">↓ 8.4<em>%</em></b><small>环比昨日</small></div>' +
+          '<div data-nav="ops:ai"><span>AI负荷预测准确率</span><b class="ts-c-g">93.6<em>%</em></b><small>指标要求 ≥92%</small></div>' +
+          '<div data-nav="ops:alerts"><span>异常预警响应时长</span><b>38<em>s</em></b><small>平均闭环响应</small></div>' +
+        '</div>' +
+        '<div class="ts-order" data-nav="ops:orders"><span>待处理整改工单</span><b class="ts-c-y">' + pendOrders + '<em>单</em></b><i>去处理 →</i></div>';
+
+      var vitaBody = JA.vitaBodyHtml();
+
+      /* ---------- 底部导航 ---------- */
+      var navs = [
+        ['ops:dashboard', '指挥大屏'], ['ops:energy', '能耗态势'], ['ops:collect', '数据采集'],
+        ['ops:environment', '环境人员'], ['ops:ai', 'AI负荷预测'], ['ops:control', '节能调控'],
+        ['ops:alerts', '异常预警'], ['ops:orders', '工单验收'], ['ops:carbon', '碳排放'],
+        ['build:site', '节点感知'], ['common:reports', '报告中心']
+      ];
+      var bottomHtml = navs.map(function (a) {
+        return '<span class="ts-nav" data-nav="' + a[0] + '">' + a[1] + '</span>';
+      }).join('');
+
+      var screen = h('div', 'ts-screen');
+      screen.innerHTML =
+        '<div class="ts-top">' +
+          '<div class="ts-back" id="tsBack">← 返回平台</div>' +
+          '<div class="ts-title"><span class="ts-deco"></span><h1>城枢慧眼</h1>' +
+            '<span class="ts-sub">基于AI感知的城市基建智慧运维与低碳能源融合管理系统</span><span class="ts-deco"></span></div>' +
+          '<div class="ts-clock" id="tsClock"></div>' +
+        '</div>' +
+        '<div class="ts-body">' +
+          '<div class="ts-side ts-left" id="tsLeft"></div>' +
+          '<div class="ts-center">' +
+            '<div class="ts-tabs">' +
+              '<span class="ts-tab on">运维总览</span>' +
+            '</div>' +
+            '<div class="ts-stage">' +
+              '<div class="ts-view" id="tsView"></div>' +
+              '<div class="ts-hint" id="tsHint"></div>' +
+              '<div class="ts-legend" id="tsLegend"></div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="ts-side ts-right" id="tsRight"></div>' +
+        '</div>' +
+        '<div class="ts-bottom">' + bottomHtml + '</div>';
+      el.appendChild(screen);
+
+      /* ---------- 时钟 & 实时微抖动 ---------- */
+      var clockEl = document.getElementById('tsClock');
+      function tick() {
+        var d = new Date();
+        function p(n) { return ('0' + n).slice(-2); }
+        var wk = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
+        clockEl.textContent = d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) +
+          ' 星期' + wk + '  ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+      }
+      tick();
+      var clockIv = setInterval(tick, 1000);
+      var liveIv = setInterval(function () {
+        var j = function (base, amp, fix) { return (base + (Math.random() - .5) * amp).toFixed(fix); };
+        var te = document.getElementById('tsTemp'); if (te) te.textContent = j(26.4, .5, 1) + '℃';
+        var hu = document.getElementById('tsHum'); if (hu) hu.textContent = Math.round(58 + (Math.random() - .5) * 4) + '%';
+        var pm = document.getElementById('tsPm'); if (pm) pm.textContent = Math.round(32 + (Math.random() - .5) * 8) + ' μg/m³';
+      }, 2500);
+
+      /* ---------- 迷你能耗趋势 ---------- */
+      function drawSpark() {
+        var cv = document.getElementById('tsSpark');
+        if (!cv) return;
+        var dpr = Math.min(window.devicePixelRatio || 1, 2);
+        var w = cv.clientWidth || 300, hgt = cv.clientHeight || 56;
+        cv.width = w * dpr; cv.height = hgt * dpr;
+        var g = cv.getContext('2d'); g.scale(dpr, dpr);
+        var pts = [];
+        for (var i = 0; i < 24; i++) pts.push(190 + Math.sin(i / 3.2) * 60 + (i > 8 && i < 19 ? 90 : 0) + (i % 4) * 9);
+        var max = Math.max.apply(null, pts), min = Math.min.apply(null, pts);
+        g.strokeStyle = 'rgba(34,224,255,.9)'; g.lineWidth = 1.6; g.beginPath();
+        pts.forEach(function (v, i) {
+          var x = i / 23 * w, y = hgt - 6 - (v - min) / (max - min) * (hgt - 14);
+          i ? g.lineTo(x, y) : g.moveTo(x, y);
+        });
+        g.stroke();
+        g.lineTo(w, hgt); g.lineTo(0, hgt); g.closePath();
+        var grd = g.createLinearGradient(0, 0, 0, hgt);
+        grd.addColorStop(0, 'rgba(34,224,255,.28)'); grd.addColorStop(1, 'rgba(34,224,255,0)');
+        g.fillStyle = grd; g.fill();
+      }
+      setTimeout(drawSpark, 60);
+
+      /* ---------- 3D 场景（运维总览 · 园区级） ---------- */
+      var viewEl = document.getElementById('tsView');
+      var hintEl = document.getElementById('tsHint');
+      var legendEl = document.getElementById('tsLegend');
+      var scene = null;
+
+      var LEGEND = '<i style="background:#2f9bff"></i>蓝光玻璃全息建筑' +
+        '<i style="background:#1f9d6a"></i>绿化景观' +
+        '<i style="background:#22e0ff"></i>点击建筑查看能源明细';
+
+      function flashGroup(id) {
+        var g0 = document.getElementById(id);
+        if (!g0) return;
+        g0.classList.remove('ts-flash');
+        void g0.offsetWidth;
+        g0.classList.add('ts-flash');
+        setTimeout(function () { g0.classList.remove('ts-flash'); }, 1400);
+      }
+
+      /* ---------- 左右面板 ---------- */
+      function renderPanels(picked) {
+        var leftEl = document.getElementById('tsLeft');
+        var rightEl = document.getElementById('tsRight');
+        if (picked && picked.b) {
+          leftEl.innerHTML =
+            grp('gEnergy', '⚡', '智能能源', buildingBody(picked.b, picked.fl || 0)) +
+            grp('gEnv', '☁', '环境感知', envBody);
+        } else {
+          leftEl.innerHTML =
+            grp('gEnergy', '⚡', '智能能源', energyBody) +
+            grp('gEnv', '☁', '环境感知', envBody);
+        }
+        rightEl.innerHTML =
+          grp('gIot', '⬣', '设备物联', iotBody) +
+          grp('gAi', '◉', 'AI运营', aiBody) +
+          grp('gVita', '✦', '园区活力', vitaBody);
+        setTimeout(drawSpark, 30);
+      }
+
+      scene = new JA.TwinCampus(viewEl, {
+        onPickBuilding: function (b, fl) {
+          flashGroup('gEnergy');
+          JA.toast('已选中：' + b.name + (fl ? ' · ' + fl + 'F' : ''), 'success');
+          renderPanels({ b: b, fl: fl });
+        },
+        onPickEmpty: function () {
+          renderPanels();
+        }
+      });
+      legendEl.innerHTML = LEGEND;
+      hintEl.textContent = '斜45°鸟瞰视角 · 自动环绕 · 拖拽旋转 · 滚轮缩放 · 点击建筑查看能源明细';
+      renderPanels();
+      requestAnimationFrame(function () { viewEl.style.opacity = '1'; });
+
+      /* ---------- 事件委托：返回全局 / 下钻导航 ---------- */
+      screen.addEventListener('click', function (e) {
+        var bk = e.target.closest ? e.target.closest('#tsBldBack') : null;
+        if (bk) {
+          if (scene && scene.selectBuilding) scene.selectBuilding(null);
+          renderPanels();
+          return;
+        }
+        var nav = e.target.closest ? e.target.closest('[data-nav]') : null;
+        if (nav) {
+          var parts = nav.getAttribute('data-nav').split(':');
+          JA.go(parts[0], parts[1]);
+        }
+      });
+      document.getElementById('tsBack').onclick = function () { JA.go('ops', 'dashboard'); };
+
+      /* ---------- 卸载清理 ---------- */
+      return function () {
+        clearInterval(clockIv); clearInterval(liveIv);
+        if (scene) scene.dispose();
+        if (screen.parentNode) screen.parentNode.removeChild(screen);
+      };
     }
   });
 
   /* ================================================================
-   * 页面 3：能耗态势地图 + 全生命周期碳足迹看板
+   * 页面 3：能耗总览 + 全生命周期碳足迹看板
    * ================================================================ */
   var LCA_PIE_KEYS = ['operation', 'production', 'transport', 'construction', 'demolition'];
   var LCA_PIE_NAMES = { operation: '运营阶段', production: '建材生产', transport: '建材运输', construction: '建造阶段', demolition: '拆除阶段' };
@@ -430,10 +910,10 @@
     });
   }
   JA.registerPage({
-    id: 'energy', view: 'ops', group: '能源管理', name: '能耗态势地图', icon: 'energy',
+    id: 'energy', view: 'ops', group: '智能能源管理', name: '能耗总览', icon: 'energy',
     render: function (el) {
       var ctx = pageCtx();
-      el.innerHTML = pageHead('能耗动态态势地图 · 全生命周期碳足迹看板', '长期运维视图 / 能源管理 / 能耗态势地图',
+      el.innerHTML = pageHead('能耗动态总览 · 全生命周期碳足迹看板', '智慧能源运维 / 智能能源管理 / 能耗总览',
         ENTRY_BTN + '<button class="btn btn-sm" id="btnCarbon">碳排放明细 →</button>');
       var area = S().lca.area;
 
@@ -675,13 +1155,13 @@
   });
 
   /* ================================================================
-   * 页面 4：数据采集与清洗
+   * 页面 4：全域感知架构
    * ================================================================ */
   JA.registerPage({
-    id: 'collect', view: 'ops', group: '能源管理', name: '数据采集与清洗', icon: 'collect',
+    id: 'collect', view: 'ops', group: '智能能源管理', name: '全域感知架构', icon: 'collect',
     render: function (el) {
       var ctx = pageCtx();
-      el.innerHTML = pageHead('数据采集与清洗 · 设备层-间隔层-站控层三层通讯网络架构', '长期运维视图 / 能源管理 / 数据采集与清洗', ENTRY_BTN);
+      el.innerHTML = pageHead('全域感知架构 · 设备层-间隔层-站控层三层通讯网络架构', '智慧能源运维 / 智能能源管理 / 全域感知架构', ENTRY_BTN);
 
       /* 三层通讯网络架构 */
       var layers = [
@@ -791,10 +1271,10 @@
    * 页面 5：环境与人员密度监测
    * ================================================================ */
   JA.registerPage({
-    id: 'environment', view: 'ops', group: '能源管理', name: '环境与人员监测', icon: 'env',
+    id: 'environment', view: 'ops', group: '智能能源管理', name: '环境与人员检测', icon: 'env',
     render: function (el) {
       var ctx = pageCtx();
-      el.innerHTML = pageHead('环境温湿度 · 人员密度监测', '长期运维视图 / 能源管理 / 环境与人员', ENTRY_BTN);
+      el.innerHTML = pageHead('环境温湿度 · 人员密度监测', '智慧能源运维 / 智能能源管理 / 环境与人员检测', ENTRY_BTN);
       var strip = h('div', 'metric-strip mb12'); el.appendChild(strip);
       var g = h('div', 'grid g-2 mb12');
       var pT = panel('各房间温度分布', '℃（红色≥28℃）');
@@ -868,10 +1348,10 @@
    * 页面 6：设备运行状态
    * ================================================================ */
   JA.registerPage({
-    id: 'equipment', view: 'ops', group: '能源管理', name: '设备状态', icon: 'device',
+    id: 'equipment', view: 'ops', group: '智能能源管理', name: '设备状态', icon: 'device',
     render: function (el) {
       var ctx = pageCtx();
-      el.innerHTML = pageHead('设备运行状态 · 启停联动3D', '长期运维视图 / 能源管理 / 设备状态', ENTRY_BTN);
+      el.innerHTML = pageHead('设备运行状态 · 启停联动3D', '智慧能源运维 / 智能能源管理 / 设备状态', ENTRY_BTN);
       var strip = h('div', 'metric-strip mb12'); el.appendChild(strip);
       var filterBar = h('div', 'tabs mb12');
       filterBar.innerHTML = '<div class="tab on" data-f="all">全部</div><div class="tab" data-f="running">运行中</div>' +
@@ -882,14 +1362,20 @@
 
       function renderStrip() {
         var d = S().devices;
+        var nRun = d.filter(function (x) { return x.status === 'running'; }).length;
+        var nWait = d.filter(function (x) { return x.status === 'stopped'; }).length;
+        var nFault = d.filter(function (x) { return x.status === 'fault'; }).length;
+        var rate = ((nRun + nWait) / d.length * 100).toFixed(1) + ' %';
         strip.innerHTML = [
-          ['设备总数', d.length + ' 台', '空调/照明/电梯/新风/配电'],
-          ['运行中', d.filter(function (x) { return x.status === 'running'; }).length + ' 台', '', 'good'],
-          ['已停机', d.filter(function (x) { return x.status === 'stopped'; }).length + ' 台', ''],
-          ['故障', d.filter(function (x) { return x.status === 'fault'; }).length + ' 台', '点击卡片可模拟修复', 'bad'],
-          ['设备在线率', Math.round(d.filter(function (x) { return x.status !== 'fault'; }).length / d.length * 100) + ' %', '', 'good']
+          ['设备总数', d.length + ' 台', '冷热源/空调通风/电梯/光储/给排水'],
+          ['运行中', nRun + ' 台', '', 'good'],
+          ['待机', nWait + ' 台', ''],
+          ['停机检修', '0 台', ''],
+          ['故障', nFault + ' 台', '点击卡片可模拟修复', 'bad'],
+          ['设备在线率', rate, '', 'good'],
+          ['设备完好率', rate, '', 'good']
         ].map(function (m) {
-          return '<div class="metric ' + (m[3] || '') + '"><b>' + m[1] + '</b><span>' + m[0] + ' · ' + m[2] + '</span></div>';
+          return '<div class="metric ' + (m[3] || '') + '"><b>' + m[1] + '</b><span>' + m[0] + (m[2] ? ' · ' + m[2] : '') + '</span></div>';
         }).join('');
       }
       function renderGrid() {
@@ -945,7 +1431,7 @@
     id: 'ai', view: 'ops', group: 'AI智能中心', name: 'AI负荷预测', icon: 'ai',
     render: function (el) {
       var ctx = pageCtx();
-      el.innerHTML = pageHead('AI 建筑负荷预测 · 工况交互重算', '长期运维视图 / AI智能中心 / 负荷预测', ENTRY_BTN);
+      el.innerHTML = pageHead('AI 建筑负荷预测 · 工况交互重算', '智慧能源运维 / AI智能中心 / 负荷预测', ENTRY_BTN);
 
       var strip = h('div', 'metric-strip mb12'); el.appendChild(strip);
 
@@ -1062,7 +1548,7 @@
           ['下小时预测', k.forecast + ' kW', 'AI实时输出'],
           ['今日实际峰值', Math.max.apply(null, S().series.total) + ' kW', ''],
           ['明日预测峰谷差', (Math.max.apply(null, p.future) - Math.min.apply(null, p.future)) + ' kW', '用于削峰'],
-          ['系统节能优化有效率', '10%-40 %', '建筑侧+光储侧综合调控', 'good']
+          ['系统综合节能效率', '10%-40 %', '建筑侧+光储侧综合调控', 'good']
         ].map(function (m) {
           return '<div class="metric ' + (m[3] || '') + '"><b>' + m[1] + '</b><span>' + m[0] + ' · ' + m[2] + '</span></div>';
         }).join('');
@@ -1124,7 +1610,7 @@
     id: 'control', view: 'ops', group: 'AI智能中心', name: '节能调控模拟', icon: 'control',
     render: function (el) {
       var ctx = pageCtx();
-      el.innerHTML = pageHead('节能调控模拟 · 建筑侧四维减碳 + 光储侧调控（真实工程方案）', '长期运维视图 / AI智能中心 / 节能调控');
+      el.innerHTML = pageHead('节能调控模拟 · 建筑侧四维减碳 + 光储侧调控（真实工程方案）', '智慧能源运维 / AI智能中心 / 节能调控');
       var strip = h('div', 'metric-strip mb12'); el.appendChild(strip);
 
       /* ① 建筑侧四维减碳策略 */
@@ -1179,7 +1665,7 @@
         '<div class="flex gap8"><button class="btn btn-primary fw" id="ctApply" style="justify-content:center">模拟下发调控</button>' +
         '<button class="btn" id="ctReset">恢复默认</button></div>' +
         '<div class="opplan mt12"><h5>联动说明</h5><p>策略下发后各房间供暖/空调风机/照明/插座/电梯分项重算，<b>3D模型能耗态势、趋势曲线、AI预测、告警规则实时联动</b>；储能电池SOC与充放电状态同步刷新。</p></div>';
-      var pEff = panel('调控效果评估 · 系统综合节能优化有效率 10%-40%');
+      var pEff = panel('调控效果评估 · 系统综合节能效率 10%-40%');
       var dGauge = h('div', 'chart'); dGauge.style.height = '210px'; pEff.bd.appendChild(dGauge);
       var effBox = h('div'); pEff.bd.appendChild(effBox);
       layout.appendChild(pSet.el); layout.appendChild(pEff.el);
@@ -1210,7 +1696,7 @@
       }
       function renderStrip() {
         strip.innerHTML = [
-          ['系统综合节能优化有效率', '10%-40 %', '建筑侧+光储侧真实方案', 'good'],
+          ['系统综合节能效率', '10%-40 %', '建筑侧+光储侧真实方案', 'good'],
           ['本次模拟节电量', (S().control.savedKwh || 0) + ' kWh', '策略下发后统计'],
           ['本次模拟减排', (S().control.savedCarbon || 0).toFixed(2) + ' tCO₂', '0.8843 kgCO₂/kWh'],
           ['储能容量', '240kW/500kWh', '调峰/调频', ''],
@@ -1274,7 +1760,7 @@
     id: 'alerts', view: 'ops', group: 'AI智能中心', name: '异常预警与优化', icon: 'alert',
     render: function (el) {
       var ctx = pageCtx();
-      el.innerHTML = pageHead('异常预警 · 智能诊断与优化方案闭环', '长期运维视图 / AI智能中心 / 异常预警', ENTRY_BTN);
+      el.innerHTML = pageHead('异常预警 · 智能诊断与优化方案闭环', '智慧能源运维 / AI智能中心 / 异常预警', ENTRY_BTN);
       var strip = h('div', 'metric-strip mb12'); el.appendChild(strip);
       var layout = h('div', 'grid g-21');
       var pList = panel('告警事件列表');
@@ -1392,7 +1878,7 @@
             else if (act === 'app') { JA.Store.pushAlert(id, 'App推送'); JA.toast('已推送至在线用户与Android终端App', 'success'); }
             else if (act === 'broadcast') { JA.Store.pushAlert(id, '全网广播'); JA.toast('已触发全网广播（App/短信/邮件）', 'success'); }
             else if (act === 'sms') { JA.Store.pushAlert(id, '短信'); JA.toast('短信预警已模拟推送至值班人员', 'success'); }
-            else if (act === 'mail') { JA.Store.pushAlert(id, '邮件'); JA.toast('邮件预警已模拟推送至能源管理邮箱', 'success'); }
+            else if (act === 'mail') { JA.Store.pushAlert(id, '邮件'); JA.toast('邮件预警已模拟推送至智能能源管理邮箱', 'success'); }
             else if (act === 'order') {
               JA.openOrderCreate({
                 type: a.type === '结构安全' ? '结构整改' : (a.type === '设备故障' ? '设备检修' : '节能整改'),
