@@ -77,7 +77,7 @@
   }
 
   /* ================================================================
-   * 智慧能源运维 · 工单与验收 → 能源能耗管理
+   * 能源精细化管理模块 · 工单与验收 → 能源能耗管理
    * （能耗异常工单 / 能耗审计记录 / 节能优化措施 / 能耗考核指标）
    * ================================================================ */
   function eoStatusTag(st) {
@@ -108,7 +108,7 @@
 
   function renderEnergyOpsPage(el) {
     var ctx = pageCtx();
-    el.innerHTML = pageHead('能耗异常工单与节能管理', '智慧能源运维 / 工单与验收',
+    el.innerHTML = pageHead('能耗异常工单与节能管理', '能源精细化管理模块 / 工单与验收',
       '<button class="btn btn-primary btn-sm" id="eoCreate">+ 创建能耗工单</button>');
 
     /* 顶部筛选区 */
@@ -384,10 +384,10 @@
    * ================================================================ */
   JA.renderOrdersPage = function (el, opts) {
     opts = opts || {};
-    if (!opts.structural) return renderEnergyOpsPage(el);   // 智慧能源运维：能源能耗管理
+    if (!opts.structural) return renderEnergyOpsPage(el);   // 能源精细化管理模块：能源能耗管理
     var ctx = pageCtx();
     el.innerHTML = pageHead(opts.structural ? '结构整改工单与整改工单' : '整改工单与整改工单',
-      (opts.structural ? '智能节点感知' : '智慧能源运维') + ' / 整改工单',
+      (opts.structural ? '建筑结构智慧运维模块' : '能源精细化管理模块') + ' / 整改工单',
       '<button class="btn btn-primary btn-sm" id="woCreate">+ 创建整改工单</button>');
 
     var strip = h('div', 'metric-strip mb12'); el.appendChild(strip);
@@ -516,7 +516,7 @@
   JA.renderReportsPage = function (el, opts) {
     opts = opts || {};
     var ctx = pageCtx();
-    el.innerHTML = pageHead('报告中心 · 验收与运营报告', (opts.structural ? '智能节点感知' : '综合总览') + ' / 报告中心');
+    el.innerHTML = pageHead('报告中心 · 验收与运营报告', (opts.structural ? '建筑结构智慧运维模块' : '综合总览') + ' / 报告中心');
     var grid = h('div', 'grid g-3 mb12');
     var cards = [
       ['lca-op', '建筑运行碳排放分项报告', '仅运维阶段口径：按供暖/空调/照明/动力四类分类展示运行碳排放（年合计约3.44万 tCO₂）', '智能能源管理', operationReport],
@@ -747,7 +747,7 @@
     render: function (el) {
       var ctx = pageCtx();
       var admin = JA.perm.isAdmin;
-      el.innerHTML = pageHead('设置 · 用户权限 / 阈值参数 / 演示数据', '智慧能源运维 / 设置');
+      el.innerHTML = pageHead('设置 · 用户权限 / 阈值参数 / 演示数据', '能源精细化管理模块 / 设置');
 
       if (!admin) {
         var deny = panel('权限受限');

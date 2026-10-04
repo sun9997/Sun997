@@ -1,5 +1,5 @@
 /* =====================================================================
- * 居安智卫 —— 智能节点感知页面集（轻量化附属模块）
+ * 居安智卫 —— 建筑结构智慧运维模块页面集（轻量化附属模块）
  * ===================================================================== */
 (function () {
   'use strict';
@@ -246,7 +246,7 @@
           '<div class="ts-side ts-struct" id="tsStruct"></div>' +
           '<div class="ts-center">' +
             '<div class="ts-tabs">' +
-              '<span class="ts-tab on">智能节点感知</span>' +
+              '<span class="ts-tab on">建筑结构智慧运维模块</span>' +
               '<span class="ts-floors" id="tsFloors" style="display:inline-flex"></span>' +
             '</div>' +
             '<div class="ts-stage">' +
@@ -459,7 +459,7 @@
     render: function (el, param) {
       var ctx = pageCtx();
       var canEdit = JA.perm.sleeveEdit;
-      el.innerHTML = pageHead('节点监测 · 套筒实时状态总览', '智能节点感知 / 结构监测 / 节点监测',
+      el.innerHTML = pageHead('节点监测 · 套筒实时状态总览', '建筑结构智慧运维模块 / 结构监测 / 节点监测',
         canEdit ? '<button class="btn btn-primary btn-sm" id="svEntry">+ 录入套筒数据</button>' :
           '<span class="lock-tip">运维账号：套筒数据只读</span>');
 
@@ -600,7 +600,7 @@
     id: 'sleeve-ai', view: 'build', group: '结构智析', name: 'AI结构健康诊断与寿命预估', icon: 'sleeve',
     render: function (el, param) {
       var ctx = pageCtx();
-      el.innerHTML = pageHead('AI结构健康诊断与寿命预估 - 结构智析', '智能节点感知 / 结构智析 / AI结构健康诊断与寿命预估',
+      el.innerHTML = pageHead('AI结构健康诊断与寿命预估 - 结构智析', '建筑结构智慧运维模块 / 结构智析 / AI结构健康诊断与寿命预估',
         '<button class="btn btn-sm" id="aiBack">← 返回节点监测</button>');
 
       /* 上半区：左 节点健康总览 / 右 AI综合诊断结论 */
@@ -813,13 +813,13 @@
 
   /* ================================================================
    * 施工页 5：节点系统设置（设置 · 权限管理 / 预警阈值 / 数据管理）
-   * 复用智慧能源运维侧设置页排版与组件样式，业务内容为结构监测场景
+   * 复用能源精细化管理模块侧设置页排版与组件样式，业务内容为结构监测场景
    * ================================================================ */
   JA.registerPage({
     id: 'build-settings', view: 'build', group: '设置', name: '节点系统设置', icon: 'setting',
     render: function (el) {
       var ctx = pageCtx();
-      el.innerHTML = pageHead('节点系统设置 · 权限管理 / 预警阈值 / 数据管理', '智能节点感知 / 设置 / 节点系统设置');
+      el.innerHTML = pageHead('节点系统设置 · 权限管理 / 预警阈值 / 数据管理', '建筑结构智慧运维模块 / 设置 / 节点系统设置');
 
       /* ---------- 模块一：节点监测权限管理 ---------- */
       var pUser = panel('节点监测权限管理', '监测范围与操作权限按角色授权');

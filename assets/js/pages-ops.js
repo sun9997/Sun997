@@ -1,5 +1,5 @@
 /* =====================================================================
- * 居安智卫 —— 智慧能源运维页面集
+ * 居安智卫 —— 能源精细化管理模块页面集
  * ===================================================================== */
 (function () {
   'use strict';
@@ -913,7 +913,7 @@
     id: 'energy', view: 'ops', group: '智能能源管理', name: '能耗总览', icon: 'energy',
     render: function (el) {
       var ctx = pageCtx();
-      el.innerHTML = pageHead('能耗动态总览 · 全生命周期碳足迹看板', '智慧能源运维 / 智能能源管理 / 能耗总览',
+      el.innerHTML = pageHead('能耗动态总览 · 全生命周期碳足迹看板', '能源精细化管理模块 / 智能能源管理 / 能耗总览',
         ENTRY_BTN + '<button class="btn btn-sm" id="btnCarbon">碳排放明细 →</button>');
       var area = S().lca.area;
 
@@ -1161,7 +1161,7 @@
     id: 'collect', view: 'ops', group: '智能能源管理', name: '全域感知架构', icon: 'collect',
     render: function (el) {
       var ctx = pageCtx();
-      el.innerHTML = pageHead('全域感知架构 · 设备层-间隔层-站控层三层通讯网络架构', '智慧能源运维 / 智能能源管理 / 全域感知架构', ENTRY_BTN);
+      el.innerHTML = pageHead('全域感知架构 · 设备层-间隔层-站控层三层通讯网络架构', '能源精细化管理模块 / 智能能源管理 / 全域感知架构', ENTRY_BTN);
 
       /* 三层通讯网络架构 */
       var layers = [
@@ -1274,7 +1274,7 @@
     id: 'environment', view: 'ops', group: '智能能源管理', name: '环境与人员检测', icon: 'env',
     render: function (el) {
       var ctx = pageCtx();
-      el.innerHTML = pageHead('环境温湿度 · 人员密度监测', '智慧能源运维 / 智能能源管理 / 环境与人员检测', ENTRY_BTN);
+      el.innerHTML = pageHead('环境温湿度 · 人员密度监测', '能源精细化管理模块 / 智能能源管理 / 环境与人员检测', ENTRY_BTN);
       var strip = h('div', 'metric-strip mb12'); el.appendChild(strip);
       var g = h('div', 'grid g-2 mb12');
       var pT = panel('各房间温度分布', '℃（红色≥28℃）');
@@ -1351,7 +1351,7 @@
     id: 'equipment', view: 'ops', group: '智能能源管理', name: '设备状态', icon: 'device',
     render: function (el) {
       var ctx = pageCtx();
-      el.innerHTML = pageHead('设备运行状态 · 启停联动3D', '智慧能源运维 / 智能能源管理 / 设备状态', ENTRY_BTN);
+      el.innerHTML = pageHead('设备运行状态 · 启停联动3D', '能源精细化管理模块 / 智能能源管理 / 设备状态', ENTRY_BTN);
       var strip = h('div', 'metric-strip mb12'); el.appendChild(strip);
       var filterBar = h('div', 'tabs mb12');
       filterBar.innerHTML = '<div class="tab on" data-f="all">全部</div><div class="tab" data-f="running">运行中</div>' +
@@ -1431,7 +1431,7 @@
     id: 'ai', view: 'ops', group: 'AI智能中心', name: 'AI负荷预测', icon: 'ai',
     render: function (el) {
       var ctx = pageCtx();
-      el.innerHTML = pageHead('AI 建筑负荷预测 · 工况交互重算', '智慧能源运维 / AI智能中心 / 负荷预测', ENTRY_BTN);
+      el.innerHTML = pageHead('AI 建筑负荷预测 · 工况交互重算', '能源精细化管理模块 / AI智能中心 / 负荷预测', ENTRY_BTN);
 
       var strip = h('div', 'metric-strip mb12'); el.appendChild(strip);
 
@@ -1610,7 +1610,7 @@
     id: 'control', view: 'ops', group: 'AI智能中心', name: '节能调控模拟', icon: 'control',
     render: function (el) {
       var ctx = pageCtx();
-      el.innerHTML = pageHead('节能调控模拟 · 建筑侧四维减碳 + 光储侧调控（真实工程方案）', '智慧能源运维 / AI智能中心 / 节能调控');
+      el.innerHTML = pageHead('节能调控模拟 · 建筑侧四维减碳 + 光储侧调控（真实工程方案）', '能源精细化管理模块 / AI智能中心 / 节能调控');
       var strip = h('div', 'metric-strip mb12'); el.appendChild(strip);
 
       /* ① 建筑侧四维减碳策略 */
@@ -1760,7 +1760,7 @@
     id: 'alerts', view: 'ops', group: 'AI智能中心', name: '异常预警与优化', icon: 'alert',
     render: function (el) {
       var ctx = pageCtx();
-      el.innerHTML = pageHead('异常预警 · 智能诊断与优化方案闭环', '智慧能源运维 / AI智能中心 / 异常预警', ENTRY_BTN);
+      el.innerHTML = pageHead('异常预警 · 智能诊断与优化方案闭环', '能源精细化管理模块 / AI智能中心 / 异常预警', ENTRY_BTN);
       var strip = h('div', 'metric-strip mb12'); el.appendChild(strip);
       var layout = h('div', 'grid g-21');
       var pList = panel('告警事件列表');
